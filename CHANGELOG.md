@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+- Ctrl+J now reaches pane apps as a raw line feed (`0x0a`) under the basic Kitty keyboard flags instead of the CSI u sequence `\e[106;5u`. Many terminals deliver Shift+Enter as a bare LF (Ghostty's `shift+enter=text:\n`, Warp on Windows, Alacritty `Shift+Return` bindings), which arrives parsed as Ctrl+J; re-encoding it as CSI u silently broke Shift+Enter (and the universal Ctrl+J newline) inside panes running pi, OMP, Claude Code, and Codex. This matches bare Ghostty, which sends `\n` for Ctrl+J under the basic flags. Apps that opt into `REPORT_ALL_KEYS_AS_ESCAPE_CODES` (Kitty flag 8) still receive the CSI u form. (#81, #106)
+- Windows clients now push the IME-safe Kitty keyboard subset (`CSI > 1 u`) to the outer terminal in addition to win32-input-mode. Terminals such as Warp that speak the Kitty keyboard protocol but ignore win32-input-mode previously collapsed Shift+Enter to a bare carriage return before it reached herdr, so panes never saw the modifier; herdr now receives `\x1b[13;2u` and relays it to the focused pane. No-op on terminals without Kitty support, which keep using win32-input-mode. (#429)
+
 ## [0.7.1] - 2026-06-24
 
 ### Added

@@ -376,6 +376,13 @@ fn setup_terminal_with_capabilities(
             }
             return Err(err);
         }
+        // Also push the IME-safe kitty keyboard subset to the outer terminal.
+        // Some hosts (e.g. Warp) ignore win32-input-mode but speak the kitty
+        // protocol; without this they collapse Shift+Enter to a bare CR and the
+        // modifier never reaches herdr. Best-effort: a no-op on terminals that
+        // do not support kitty (they keep using win32-input-mode above). Popped
+        // in restore_terminal_state.
+        let _ = enable_windows_kitty_keyboard(&mut io::stdout());
     }
 
     let modify_other_keys_mode = enable_client_protocols
@@ -561,6 +568,7 @@ fn restore_terminal_state(
 
     #[cfg(windows)]
     if windows_vti_input_backend_enabled() && windows_win32_input_mode_enabled() {
+        let _ = disable_windows_kitty_keyboard(&mut io::stdout());
         let _ = disable_windows_win32_input_mode(&mut io::stdout());
     }
 }
@@ -604,6 +612,22 @@ fn enable_windows_win32_input_mode(writer: &mut impl std::io::Write) -> io::Resu
 #[cfg(windows)]
 fn disable_windows_win32_input_mode(writer: &mut impl std::io::Write) -> io::Result<()> {
     writer.write_all(b"\x1b[?9001l")?;
+    writer.flush()
+}
+
+#[cfg(windows)]
+fn enable_windows_kitty_keyboard(writer: &mut impl std::io::Write) -> io::Result<()> {
+    // CSI > 1 u — push the disambiguate-escape-codes flag (the IME-safe subset,
+    // matching `ime_compatible_keyboard_enhancement_flags` used on Unix). This is
+    // what makes Shift+Enter arrive as `\x1b[13;2u` instead of a bare `\r`.
+    writer.write_all(b"\x1b[>1u")?;
+    writer.flush()
+}
+
+#[cfg(windows)]
+fn disable_windows_kitty_keyboard(writer: &mut impl std::io::Write) -> io::Result<()> {
+    // CSI < u — pop the flags pushed by enable_windows_kitty_keyboard.
+    writer.write_all(b"\x1b[<u")?;
     writer.flush()
 }
 
@@ -2136,6 +2160,18 @@ mod tests {
         );
         expected.extend_from_slice(b"\x1b[?25h\x1b[0 q");
         assert_eq!(output, expected);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_kitty_keyboard_push_and_pop_emit_csi_sequences() {
+        let mut push = Vec::new();
+        enable_windows_kitty_keyboard(&mut push).unwrap();
+        assert_eq!(push, b"\x1b[>1u");
+
+        let mut pop = Vec::new();
+        disable_windows_kitty_keyboard(&mut pop).unwrap();
+        assert_eq!(pop, b"\x1b[<u");
     }
 
     #[cfg(unix)]

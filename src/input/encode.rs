@@ -4,6 +4,7 @@ use super::{KeyboardProtocol, MouseProtocolEncoding, TerminalKey};
 
 const KITTY_FLAG_REPORT_EVENT_TYPES: u16 = 0b0000_0010;
 const KITTY_FLAG_REPORT_ALTERNATE_KEYS: u16 = 0b0000_0100;
+const KITTY_FLAG_REPORT_ALL_KEYS: u16 = 0b0000_1000;
 
 /// Encode a key event for a PTY child using the pane's negotiated keyboard protocol.
 #[allow(dead_code)] // exercised in input unit tests; production uses TerminalRuntime helpers
@@ -21,6 +22,24 @@ pub fn encode_terminal_key(key: TerminalKey, protocol: KeyboardProtocol) -> Vec<
         return Vec::new();
     }
 
+    // Ctrl+J carries the legacy line-feed byte (0x0a). Many terminals deliver
+    // Shift+Enter as a bare LF (Ghostty's `shift+enter=text:\n`, Warp on Windows,
+    // Alacritty `Shift+Return` bindings), which arrives here parsed as Ctrl+J. For
+    // a pane on the basic Kitty flags the encoder below would emit CSI u
+    // `\e[106;5u`, which pi/OMP/Claude Code/Codex do not treat as a newline — so
+    // Shift+Enter (and the universal Ctrl+J newline) silently breaks inside panes.
+    // Keep the legacy LF unless the app opted into REPORT_ALL_KEYS_AS_ESCAPE_CODES
+    // (flag 8); this matches bare Ghostty, which sends `\n` for Ctrl+J under the
+    // basic flags. (#81, #106)
+    if let KeyboardProtocol::Kitty { flags } = protocol {
+        if flags & KITTY_FLAG_REPORT_ALL_KEYS == 0 && is_ctrl_j(&key) {
+            return match key.kind {
+                crossterm::event::KeyEventKind::Release => Vec::new(),
+                _ => vec![b'\n'],
+            };
+        }
+    }
+
     if let Some(bytes) = encode_text_input(&key) {
         return bytes;
     }
@@ -34,6 +53,15 @@ pub fn encode_terminal_key(key: TerminalKey, protocol: KeyboardProtocol) -> Vec<
         return Vec::new();
     }
     encode_legacy(key.as_key_event())
+}
+
+/// Ctrl+J is the bare line-feed control byte (0x0a). Under the basic Kitty flags
+/// it must keep that legacy encoding rather than CSI u so inbound LF — how many
+/// terminals deliver Shift+Enter — reaches pane apps as a real newline. Used by
+/// [`encode_terminal_key`]. Exactly Ctrl with no other modifiers; Ctrl+Shift+J
+/// has no legacy form and stays CSI u.
+fn is_ctrl_j(key: &TerminalKey) -> bool {
+    key.code == KeyCode::Char('j') && key.modifiers == KeyModifiers::CONTROL
 }
 
 #[allow(dead_code)] // exercised in input unit tests; production uses TerminalRuntime helpers
@@ -618,6 +646,54 @@ mod tests {
             encode_key(key, KeyboardProtocol::Kitty { flags: 1 }),
             b"\x1b[97;6u"
         );
+    }
+
+    #[test]
+    fn kitty_ctrl_j_round_trips_as_lf_byte() {
+        let key = KeyEvent::new(KeyCode::Char('j'), KeyModifiers::CONTROL);
+        // Basic disambiguate-only push (pi/OMP default `\e[>1u`).
+        assert_eq!(encode_key(key, KeyboardProtocol::Kitty { flags: 1 }), b"\n");
+        // Enriched push `\e[>7u` (disambiguate | report event types | alternate keys).
+        assert_eq!(encode_key(key, KeyboardProtocol::Kitty { flags: 7 }), b"\n");
+    }
+
+    #[test]
+    fn kitty_ctrl_j_release_is_suppressed() {
+        let key = KeyEvent::new_with_kind(
+            KeyCode::Char('j'),
+            KeyModifiers::CONTROL,
+            crossterm::event::KeyEventKind::Release,
+        );
+        // Once Ctrl+J falls back to the legacy `\n` byte it has no release form,
+        // even when the pane reports event types.
+        assert!(encode_key(key, KeyboardProtocol::Kitty { flags: 7 }).is_empty());
+    }
+
+    #[test]
+    fn kitty_ctrl_j_uses_csi_u_when_report_all_keys_is_set() {
+        let key = KeyEvent::new(KeyCode::Char('j'), KeyModifiers::CONTROL);
+        assert_eq!(
+            encode_key(key, KeyboardProtocol::Kitty { flags: 0b1000 }),
+            b"\x1b[106;5u"
+        );
+    }
+
+    #[test]
+    fn kitty_ctrl_shift_j_still_uses_csi_u() {
+        let key = KeyEvent::new(
+            KeyCode::Char('j'),
+            KeyModifiers::CONTROL | KeyModifiers::SHIFT,
+        );
+        assert_eq!(
+            encode_key(key, KeyboardProtocol::Kitty { flags: 1 }),
+            b"\x1b[106;6u"
+        );
+    }
+
+    #[test]
+    fn legacy_ctrl_j_is_lf_byte() {
+        let key = KeyEvent::new(KeyCode::Char('j'), KeyModifiers::CONTROL);
+        assert_eq!(encode_key(key, KeyboardProtocol::Legacy), b"\n");
     }
 
     #[test]
