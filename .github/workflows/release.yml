@@ -189,7 +189,7 @@ jobs:
           body_path: RELEASE_NOTES.md
 
   upload-release-assets:
-    needs: build
+    needs: release
     runs-on: ubuntu-latest
     permissions:
       contents: read
