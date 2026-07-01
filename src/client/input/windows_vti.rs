@@ -1268,6 +1268,37 @@ mod tests {
     }
 
     #[test]
+    fn vti_shift_digit_symbol_encodes_as_literal_text_in_kitty_mode() {
+        let events = translate([key_vk_with_unicode_repeat(0x34, '$', 0x0010, 1)]);
+        let [crate::protocol::ClientInputEvent::Key {
+            code,
+            modifiers,
+            kind,
+        }] = events.as_slice()
+        else {
+            panic!("expected one key event");
+        };
+
+        let raw = crate::protocol::ClientInputEvent::Key {
+            code: code.clone(),
+            modifiers: *modifiers,
+            kind: *kind,
+        }
+        .to_raw_input_event();
+        let crate::raw_input::RawInputEvent::Key(key) = raw else {
+            panic!("expected raw key");
+        };
+
+        assert_eq!(
+            crate::input::encode_terminal_key(
+                key,
+                crate::input::KeyboardProtocol::Kitty { flags: 1 }
+            ),
+            b"$"
+        );
+    }
+
+    #[test]
     fn vti_modifier_only_key_records_do_not_emit_terminal_input() {
         let modifier_records = [
             key_vk_with_utf16_mods(0x11, 0, 0x0008),

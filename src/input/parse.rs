@@ -67,6 +67,7 @@ fn parse_legacy_key_sequence(data: &str) -> Option<TerminalKey> {
         "\r" => Some(TerminalKey::new(KeyCode::Enter, KeyModifiers::empty())),
         "\t" => Some(TerminalKey::new(KeyCode::Tab, KeyModifiers::empty())),
         "\x1b" => Some(TerminalKey::new(KeyCode::Esc, KeyModifiers::empty())),
+        "\x08" => Some(TerminalKey::new(KeyCode::Backspace, KeyModifiers::empty())),
         "\x1b\x7f" => Some(TerminalKey::new(KeyCode::Backspace, KeyModifiers::ALT)),
         "\x7f" => Some(TerminalKey::new(KeyCode::Backspace, KeyModifiers::empty())),
         _ if data.starts_with('\x1b') => {
@@ -695,6 +696,13 @@ mod tests {
         let key = parse_terminal_key_sequence("\x03").unwrap();
         assert_eq!(key.code, KeyCode::Char('c'));
         assert_eq!(key.modifiers, KeyModifiers::CONTROL);
+    }
+
+    #[test]
+    fn parse_legacy_bs_sequence_as_backspace() {
+        let key = parse_terminal_key_sequence("\x08").unwrap();
+        assert_eq!(key.code, KeyCode::Backspace);
+        assert_eq!(key.modifiers, KeyModifiers::empty());
     }
 
     #[test]

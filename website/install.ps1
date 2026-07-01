@@ -19,6 +19,9 @@ if ($Channel -notin @("stable", "preview")) {
     exit 1
 }
 
+$HerdrCommandAliases = @("pk-herd", "herd")
+
+
 function Write-Step {
     param([string]$Message)
     Write-Host "==> $Message"
@@ -37,6 +40,19 @@ function Get-HerdrCommandSource {
 
     return $existing.Source
 }
+
+function Install-HerdrCommandAliases {
+    param(
+        [string]$ReleaseDir,
+        [string[]]$Aliases
+    )
+
+    $source = Join-Path $ReleaseDir "herdr.exe"
+    foreach ($alias in $Aliases) {
+        Copy-Item -LiteralPath $source -Destination (Join-Path $ReleaseDir "$alias.exe") -Force
+    }
+}
+
 
 function Test-PathStartsWith {
     param(
@@ -479,13 +495,17 @@ try {
             Move-Item -LiteralPath $stagingDir -Destination $releaseDir
         }
 
+        Install-HerdrCommandAliases -ReleaseDir $releaseDir -Aliases $HerdrCommandAliases
+
         Set-ManagedJunction -LinkPath $currentDir -TargetPath $releaseDir -ManagedTargetPrefix $releasesDir
         Set-ManagedJunction -LinkPath $visibleBinDir -TargetPath $releaseDir -ManagedTargetPrefix $standaloneRoot -AllowLegacyHerdrBinMigration $allowLegacyVisibleBinMigration
 
-        $herdrCommand = Join-Path $visibleBinDir "herdr.exe"
-        & $herdrCommand --version *> $null
-        if ($LASTEXITCODE -ne 0) {
-            throw "Installed Herdr command failed verification: $herdrCommand --version"
+        foreach ($command in @("herdr") + $HerdrCommandAliases) {
+            $commandPath = Join-Path $visibleBinDir "$command.exe"
+            & $commandPath --version *> $null
+            if ($LASTEXITCODE -ne 0) {
+                throw "Installed Herdr command failed verification: $commandPath --version"
+            }
         }
 
         Remove-OldReleases -ReleasesDir $releasesDir -CurrentReleaseDir $releaseDir -Keep $Retain
@@ -515,6 +535,6 @@ if (-not (Test-PathStartsWith -Path $resolvedHerdr -Prefix $visibleBinDir)) {
     Write-WarningStep "PowerShell still resolves herdr to $resolvedHerdr. Open a new PowerShell window or inspect PATH order manually."
 }
 
-Write-Step "Current PowerShell session: herdr"
-Write-Step "Future PowerShell windows: open a new PowerShell window and run: herdr"
+Write-Step "Current PowerShell session: herdr (aliases: pk-herd, herd)"
+Write-Step "Future PowerShell windows: open a new PowerShell window and run: herdr, pk-herd, or herd"
 Write-Host "Herdr $versionIdentity installed successfully."

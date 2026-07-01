@@ -395,6 +395,10 @@ fn shifted_text_char(key: &TerminalKey, ch: char) -> Option<char> {
         return Some(ch.to_ascii_uppercase());
     }
 
+    if !ch.is_control() {
+        return Some(ch);
+    }
+
     None
 }
 
@@ -739,6 +743,12 @@ mod tests {
     fn legacy_shift_uppercase_letter_stays_uppercase() {
         let key = KeyEvent::new(KeyCode::Char('L'), KeyModifiers::SHIFT);
         assert_eq!(encode_key(key, KeyboardProtocol::Legacy), b"L");
+    }
+
+    #[test]
+    fn kitty_shift_symbol_from_windows_vti_sends_text() {
+        let key = KeyEvent::new(KeyCode::Char('$'), KeyModifiers::SHIFT);
+        assert_eq!(encode_key(key, KeyboardProtocol::Kitty { flags: 1 }), b"$");
     }
 
     #[test]

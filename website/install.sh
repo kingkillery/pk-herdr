@@ -2,6 +2,7 @@
 set -eu
 
 BIN="herdr"
+ALIAS_BINS="pk-herd herd"
 MANIFEST_URL="https://herdr.dev/latest.json"
 INSTALL_DIR="${HERDR_INSTALL_DIR:-$HOME/.local/bin}"
 
@@ -72,8 +73,11 @@ main() {
     mkdir -p "$INSTALL_DIR"
     mv "${TMP}/${BIN}" "${INSTALL_DIR}/${BIN}"
     chmod +x "${INSTALL_DIR}/${BIN}"
+    for alias in $ALIAS_BINS; do
+        ln -sf "$BIN" "${INSTALL_DIR}/${alias}"
+    done
 
-    log "installed ${BIN} to ${INSTALL_DIR}/${BIN}"
+    log "installed ${BIN} to ${INSTALL_DIR}/${BIN} (aliases: ${ALIAS_BINS})"
 
     # check PATH
     case ":${PATH}:" in
@@ -91,7 +95,7 @@ main() {
     # verify
     if command -v "$BIN" >/dev/null 2>&1; then
         echo ""
-        log "ready. run 'herdr' to get started."
+        log "ready. run 'herdr' (or 'pk-herd' / 'herd') to get started."
     fi
 
     echo ""
