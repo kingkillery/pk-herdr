@@ -14,6 +14,7 @@ mod creation;
 mod ids;
 mod input;
 mod runtime;
+mod runtime_mutations;
 mod session;
 pub mod state;
 mod terminal_targets;
@@ -602,6 +603,7 @@ impl App {
             pane_borders: config.ui.pane_borders,
             pane_gaps: config.ui.pane_gaps,
             show_agent_labels_on_pane_borders: config.ui.show_agent_labels_on_pane_borders,
+            hide_tab_bar_when_single_tab: config.ui.hide_tab_bar_when_single_tab,
             pane_history_persistence: config.experimental.pane_history,
             reveal_hidden_cursor_for_cjk_ime: config.experimental.reveal_hidden_cursor_for_cjk_ime,
             cjk_ime_agent_filter_configured: !config.experimental.cjk_ime_agents.is_empty(),
@@ -885,7 +887,7 @@ impl App {
 
             if self.state.request_new_workspace {
                 self.state.request_new_workspace = false;
-                self.dispatch_tui_api_request(
+                self.dispatch_runtime_mutation(
                     "tui.workspace.create",
                     crate::api::schema::Method::WorkspaceCreate(
                         crate::api::schema::WorkspaceCreateParams {
@@ -902,7 +904,7 @@ impl App {
             if self.state.request_new_tab {
                 self.state.request_new_tab = false;
                 let label = self.state.requested_new_tab_name.take();
-                self.dispatch_tui_api_request(
+                self.dispatch_runtime_mutation(
                     "tui.tab.create",
                     crate::api::schema::Method::TabCreate(crate::api::schema::TabCreateParams {
                         workspace_id: None,
@@ -926,7 +928,7 @@ impl App {
             }
 
             if let Some(cwd) = self.state.request_new_workspace_cwd.take() {
-                self.dispatch_tui_api_request(
+                self.dispatch_runtime_mutation(
                     "tui.workspace.create_cwd",
                     crate::api::schema::Method::WorkspaceCreate(
                         crate::api::schema::WorkspaceCreateParams {
@@ -1363,6 +1365,7 @@ impl App {
                 self.state.pane_gaps = config.ui.pane_gaps;
                 self.state.show_agent_labels_on_pane_borders =
                     config.ui.show_agent_labels_on_pane_borders;
+                self.state.hide_tab_bar_when_single_tab = config.ui.hide_tab_bar_when_single_tab;
                 self.state.agent_panel_sort =
                     agent_panel_sort_from_config(config.ui.agent_panel_sort);
                 self.state.agent_panel_scroll = 0;
