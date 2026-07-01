@@ -37,7 +37,7 @@ Homebrew and the mise registry currently track upstream Herdr, not this fork. Us
 mise use -g github:kingkillery/pk-herdr
 ```
 
-or download the stable Linux/macOS binary from [releases](https://github.com/kingkillery/pk-herdr/releases). Native Windows binaries are preview-only beta builds.
+or download binaries directly from the fork's Cloudflare distribution endpoint (per-asset URLs are listed in [the latest release manifest](https://herdr.pkking.computer/latest.json) and the [preview manifest](https://herdr.pkking.computer/preview.json); the same URLs feed the install script and `herdr update`). Native Windows binaries are preview-only beta builds.
 
 ### remote install
 

@@ -57,7 +57,7 @@ windows preview beta:
 powershell -ExecutionPolicy Bypass -c "irm https://herdr.pkking.computer/install.ps1 | iex"
 ```
 
-also available on the fork via `mise use -g github:kingkillery/pk-herdr`, or download the stable Linux/macOS binary from [releases](https://github.com/kingkillery/pk-herdr/releases). Homebrew and the mise registry currently track upstream Herdr, not this fork.
+also available on the fork via `mise use -g github:kingkillery/pk-herdr`, or download binaries directly from the fork's Cloudflare distribution endpoint (per-asset URLs are listed in [the latest release manifest](https://herdr.pkking.computer/latest.json) and the [preview manifest](https://herdr.pkking.computer/preview.json); the same URLs feed the install script and `herdr update`). Homebrew and the mise registry currently track upstream Herdr, not this fork.
 
 `herdr update` upgrades an installer-managed install; mise, Homebrew, and Nix update through their own package managers. channel, preview, restart, and restore details are in the [install docs](https://herdr.pkking.computer/docs/install/).
 
