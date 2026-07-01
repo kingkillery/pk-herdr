@@ -4,8 +4,7 @@ pub(crate) const PREVIEW_UPDATE_MANIFEST_URL: &str = "https://herdr.pkking.compu
 pub(crate) const WINDOWS_INSTALL_SCRIPT_COMMAND: &str =
     "irm https://herdr.pkking.computer/install.ps1 | iex";
 
-const RELEASE_DOWNLOAD_URL_PREFIX: &str =
-    "https://github.com/kingkillery/pk-herdr/releases/download/";
+const RELEASE_DOWNLOAD_URL_PREFIX: &str = "https://herdr.pkking.computer/releases/download/";
 
 pub(crate) fn validate_release_asset_url(url: &str) -> Result<(), String> {
     let url = url.trim();
@@ -25,7 +24,7 @@ mod tests {
     #[test]
     fn accepts_fork_release_asset_urls() {
         assert!(validate_release_asset_url(
-            "https://github.com/kingkillery/pk-herdr/releases/download/v0.7.1/herdr-linux-x86_64"
+            "https://herdr.pkking.computer/releases/download/v0.7.1/herdr-linux-x86_64"
         )
         .is_ok());
     }

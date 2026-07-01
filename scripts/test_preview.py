@@ -51,7 +51,7 @@ class PreviewNotesTests(unittest.TestCase):
             )
             self.assertEqual(
                 data["assets"]["windows-x86_64"]["url"],
-                "https://github.com/kingkillery/pk-herdr/releases/download/preview-2026-06-02-abcdef123456/herdr-windows-x86_64.exe",
+                "https://herdr.pkking.computer/releases/download/preview-2026-06-02-abcdef123456/herdr-windows-x86_64.exe",
             )
             self.assertIn("2026-06-02-abcdef123456", data["builds"])
 

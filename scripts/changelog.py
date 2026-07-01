@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_RELEASE_REPO = "kingkillery/pk-herdr"
+DEFAULT_RELEASE_ASSET_BASE_URL = "https://herdr.pkking.computer/releases/download"
 DEFAULT_LIVE_MANIFEST_URL = "https://herdr.pkking.computer/latest.json"
 
 SECTION_RE = re.compile(r"^##\s+(?:\[(?P<bracketed>[^\]]+)\]|(?P<plain>.+?))\s*$", re.MULTILINE)
@@ -288,7 +289,7 @@ def default_release_assets(version: str, repo: str = DEFAULT_RELEASE_REPO) -> di
     normalized_version = normalize_version(version)
     tag = f"v{normalized_version}"
     return {
-        target: f"https://github.com/{repo}/releases/download/{tag}/{EXPECTED_ASSET_NAMES[target]}"
+        target: f"{DEFAULT_RELEASE_ASSET_BASE_URL}/{tag}/{EXPECTED_ASSET_NAMES[target]}"
         for target in ASSET_TARGETS
     }
 
@@ -327,10 +328,9 @@ def manifest_from_release_payload(
         asset = release_assets.get(asset_name)
         if not isinstance(asset, dict):
             raise ChangelogError(f"GitHub release v{normalized_version} is missing asset {asset_name}")
-        url = str(asset.get("url") or "").strip()
-        if not url:
-            raise ChangelogError(f"GitHub release asset {asset_name} is missing a download URL")
-        manifest_assets[target] = url
+        manifest_assets[target] = (
+            f"{DEFAULT_RELEASE_ASSET_BASE_URL}/v{normalized_version}/{asset_name}"
+        )
 
     return {
         "version": normalized_version,

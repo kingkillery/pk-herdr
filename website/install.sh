@@ -4,7 +4,7 @@ set -eu
 BIN="herdr"
 ALIAS_BINS="pk-herd herd"
 MANIFEST_URL="https://herdr.pkking.computer/latest.json"
-RELEASE_URL_PREFIX="https://github.com/kingkillery/pk-herdr/releases/download/"
+RELEASE_URL_PREFIX="https://herdr.pkking.computer/releases/download/"
 INSTALL_DIR="${HERDR_INSTALL_DIR:-$HOME/.local/bin}"
 
 main() {

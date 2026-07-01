@@ -22,7 +22,7 @@ if ($Channel -notin @("stable", "preview")) {
 $HerdrCommandAliases = @("pk-herd", "herd")
 $DefaultStableManifestUrl = "https://herdr.pkking.computer/latest.json"
 $DefaultPreviewManifestUrl = "https://herdr.pkking.computer/preview.json"
-$ReleaseAssetUrlPrefix = "https://github.com/kingkillery/pk-herdr/releases/download/"
+$ReleaseAssetUrlPrefix = "https://herdr.pkking.computer/releases/download/"
 
 
 

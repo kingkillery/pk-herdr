@@ -6,6 +6,12 @@
     "directory": "./dist",
     "binding": "ASSETS"
   },
+  "r2_buckets": [
+    {
+      "binding": "RELEASES",
+      "bucket_name": "pk-herdr-releases"
+    }
+  ],
   "routes": [
     {
       "pattern": "herdr.pkking.computer",

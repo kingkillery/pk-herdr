@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_RELEASE_REPO = "kingkillery/pk-herdr"
+DEFAULT_RELEASE_ASSET_BASE_URL = "https://herdr.pkking.computer/releases/download"
 
 ASSET_TARGETS = (
     "linux-x86_64",
@@ -168,7 +169,7 @@ def build_notes(previous: str, commit: str, build_id: str, base_version: str, re
 
 def default_asset_urls(repo: str, tag: str) -> dict[str, str]:
     return {
-        target: f"https://github.com/{repo}/releases/download/{tag}/{EXPECTED_ASSET_NAMES[target]}"
+        target: f"{DEFAULT_RELEASE_ASSET_BASE_URL}/{tag}/{EXPECTED_ASSET_NAMES[target]}"
         for target in ASSET_TARGETS
     }
 
