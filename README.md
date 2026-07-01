@@ -48,18 +48,50 @@ tmux gives you persistence and panes, but it was built before agents existed. it
 ## install
 
 ```bash
-curl -fsSL https://herdr.dev/install.sh | sh
+curl -fsSL https://herdr.pkking.computer/install.sh | sh
 ```
 
 windows preview beta:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -c "irm https://herdr.dev/install.ps1 | iex"
+powershell -ExecutionPolicy Bypass -c "irm https://herdr.pkking.computer/install.ps1 | iex"
 ```
 
-also available with `brew install herdr`, `mise use -g herdr`, `nix run github:ogulcancelik/herdr`, or as a stable Linux/macOS binary from [releases](https://github.com/ogulcancelik/herdr/releases).
+also available on the fork via `mise use -g github:kingkillery/pk-herdr`, or download the stable Linux/macOS binary from [releases](https://github.com/kingkillery/pk-herdr/releases). Homebrew and the mise registry currently track upstream Herdr, not this fork.
 
-`herdr update` upgrades an installer-managed install; Homebrew, mise, and Nix update through their own package managers. channel, preview, restart, and restore details are in the [install docs](https://herdr.dev/docs/install/).
+`herdr update` upgrades an installer-managed install; mise, Homebrew, and Nix update through their own package managers. channel, preview, restart, and restore details are in the [install docs](https://herdr.pkking.computer/docs/install/).
+
+### remote install
+
+The installer and update channel are hosted at the fork's Cloudflare distribution endpoint (`https://herdr.pkking.computer`). To use `herdr --remote`, the local client must also be the pk-herdr fork — otherwise the remote bootstrap will pull binaries from the upstream channel. Install the local fork client first:
+
+```bash
+curl -fsSL https://herdr.pkking.computer/install.sh | sh
+```
+
+Then push the same installer to a Linux or macOS host over SSH, and attach from your local machine. `herdr --remote` does not support Windows hosts yet — from Windows, SSH into the server and run `herdr` there directly.
+
+```bash
+# one-line install on a remote host (Linux/macOS only)
+ssh user@host 'curl -fsSL https://herdr.pkking.computer/install.sh | sh'
+
+# install to a custom directory on the remote host
+ssh user@host 'curl -fsSL https://herdr.pkking.computer/install.sh | HERDR_INSTALL_DIR=$HOME/.local/bin sh'
+
+# attach from your local machine (local thin client → remote server)
+herdr --remote user@host
+
+# or via SSH config alias
+herdr --remote workbox
+```
+
+`herdr --remote` reuses an existing remote `herdr` on `$PATH` when its protocol version matches. If the host has no matching binary, interactive runs prompt to install one to `~/.local/bin/herdr` from the fork's latest manifest; non-interactive runs fail instead of mutating the host. The download is validated against the manifest asset URL prefix and refused if the binary is not hosted at the fork's Cloudflare distribution endpoint.
+
+Updates on the remote host use the same channel:
+
+```bash
+ssh user@host 'herdr update'
+```
 
 ## quick start
 

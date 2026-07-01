@@ -39,6 +39,38 @@ mise use -g github:kingkillery/pk-herdr
 
 or download the stable Linux/macOS binary from [releases](https://github.com/kingkillery/pk-herdr/releases). Native Windows binaries are preview-only beta builds.
 
+### remote install
+
+The installer and update channel are hosted at the fork's Cloudflare distribution endpoint (`https://herdr.pkking.computer`). To use `herdr --remote`, the local client must also be the pk-herdr fork — otherwise the remote bootstrap will pull binaries from the upstream channel. Install the local fork client first:
+
+```bash
+curl -fsSL https://herdr.pkking.computer/install.sh | sh
+```
+
+Then push the same installer to a Linux or macOS host over SSH, and attach from your local machine. `herdr --remote` does not support Windows hosts yet — from Windows, SSH into the server and run `herdr` there directly.
+
+```bash
+# one-line install on a remote host (Linux/macOS only)
+ssh user@host 'curl -fsSL https://herdr.pkking.computer/install.sh | sh'
+
+# install to a custom directory on the remote host
+ssh user@host 'curl -fsSL https://herdr.pkking.computer/install.sh | HERDR_INSTALL_DIR=$HOME/.local/bin sh'
+
+# attach from your local machine (local thin client → remote server)
+herdr --remote user@host
+
+# or via SSH config alias
+herdr --remote workbox
+```
+
+`herdr --remote` reuses an existing remote `herdr` on `$PATH` when its protocol version matches. If the host has no matching binary, interactive runs prompt to install one to `~/.local/bin/herdr` from the fork's latest manifest; non-interactive runs fail instead of mutating the host. The download is validated against the manifest asset URL prefix and refused if the binary is not hosted at the fork's Cloudflare distribution endpoint.
+
+Updates on the remote host use the same channel:
+
+```bash
+ssh user@host 'herdr update'
+```
+
 ## quick start
 
 Start Herdr in the directory where the work lives:
