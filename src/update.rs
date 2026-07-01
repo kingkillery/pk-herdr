@@ -1,6 +1,6 @@
 //! Self-update mechanism.
 //!
-//! Checks the hosted herdr.dev update manifest for newer versions.
+//! Checks the pk-herdr fork update manifest for newer versions.
 //! Manual `herdr update` downloads and installs the binary.
 //! Background checks only surface availability and release notes.
 //! Uses `curl` as a subprocess for HTTP — no additional Rust HTTP dependencies.
@@ -23,13 +23,15 @@ use std::time::{Duration, Instant};
 use interprocess::local_socket::traits::Stream as _;
 use serde::{Deserialize, Deserializer};
 
-const STABLE_UPDATE_MANIFEST_URL: &str = "https://herdr.dev/latest.json";
-const PREVIEW_UPDATE_MANIFEST_URL: &str = "https://herdr.dev/preview.json";
+const STABLE_UPDATE_MANIFEST_URL: &str = crate::release_source::STABLE_UPDATE_MANIFEST_URL;
+const PREVIEW_UPDATE_MANIFEST_URL: &str = crate::release_source::PREVIEW_UPDATE_MANIFEST_URL;
+#[cfg(all(test, unix))]
 const HOMEBREW_FORMULA_API_URL: &str = "https://formulae.brew.sh/api/formula/herdr.json";
 const HERDR_UPDATE_COMMAND: &str = "herdr update";
-const HOMEBREW_UPDATE_COMMAND: &str = "brew update && brew upgrade herdr";
-const MISE_UPDATE_COMMAND: &str = "mise upgrade herdr";
-const NIX_UPDATE_COMMAND: &str = "update through Nix";
+const DIRECT_FORK_INSTALL_COMMAND: &str =
+    "curl -fsSL https://herdr.pkking.computer/install.sh | sh";
+const PACKAGE_MANAGER_FORK_UPDATE_GUIDANCE: &str =
+    "Package-manager installs are outside pk-herdr's direct updater; use a fork-specific package source or install pk-herdr directly from kingkillery/pk-herdr for fork-only updates.";
 const MISE_INSTALLS_DIR_ENV: &str = "MISE_INSTALLS_DIR";
 const FAKE_UPDATE_VERSION_ENV: &str = "HERDR_FAKE_UPDATE_VERSION";
 const FAKE_UPDATE_NOTES_VERSION_ENV: &str = "HERDR_FAKE_UPDATE_NOTES_VERSION";
@@ -216,11 +218,13 @@ struct PreviewBuildMetadata {
     assets: BTreeMap<String, AssetRef>,
 }
 
+#[cfg(all(test, unix))]
 #[derive(Deserialize)]
 struct HomebrewFormula {
     versions: HomebrewFormulaVersions,
 }
 
+#[cfg(all(test, unix))]
 #[derive(Deserialize)]
 struct HomebrewFormulaVersions {
     stable: String,
@@ -362,6 +366,7 @@ fn release_info_from_manifest(manifest: &UpdateManifest) -> Result<Option<Releas
         .get(&asset_key)
         .ok_or_else(|| format!("no binary for {asset_key} in update manifest"))?;
     let download_url = asset.url.clone();
+    crate::release_source::validate_release_asset_url(&download_url)?;
 
     Ok(Some(ReleaseInfo {
         identity: latest.to_string(),
@@ -447,6 +452,7 @@ fn release_info_from_preview_manifest(
         })
         .ok_or_else(|| format!("no binary for {asset_key} in preview manifest"))?;
     let download_url = asset.url.clone();
+    crate::release_source::validate_release_asset_url(&download_url)?;
 
     Ok(Some(ReleaseInfo {
         identity: preview_display_version(&manifest.base_version, build_id),
@@ -482,6 +488,7 @@ fn check_latest() -> Result<Option<ReleaseInfo>, String> {
     Ok(release)
 }
 
+#[cfg(all(test, unix))]
 fn parse_homebrew_formula_stable_version(input: &[u8]) -> Result<Version, String> {
     let formula: HomebrewFormula = serde_json::from_slice(input)
         .map_err(|e| format!("failed to parse Homebrew formula JSON: {e}"))?;
@@ -493,6 +500,7 @@ fn parse_homebrew_formula_stable_version(input: &[u8]) -> Result<Version, String
     })
 }
 
+#[cfg(all(test, unix))]
 fn homebrew_update_from_formula_json(
     input: &[u8],
     current: &Version,
@@ -505,6 +513,7 @@ fn homebrew_update_from_formula_json(
     Ok(Some(latest))
 }
 
+#[cfg(all(test, unix))]
 fn check_homebrew_latest() -> Result<Option<Version>, String> {
     let current = Version::current();
 
@@ -635,7 +644,7 @@ fn install_windows_update_with_installer(channel: UpdateChannel) -> Result<(), S
             "-ExecutionPolicy",
             "Bypass",
             "-Command",
-            "irm https://herdr.dev/install.ps1 | iex",
+            crate::release_source::WINDOWS_INSTALL_SCRIPT_COMMAND,
         ])
         .env("HERDR_CHANNEL", channel.as_str())
         // Drop any inherited PSModulePath. When herdr is launched from
@@ -1724,12 +1733,8 @@ fn print_running_session_update_outcomes(
 // ---------------------------------------------------------------------------
 
 pub(crate) fn update_install_command() -> &'static str {
-    if is_homebrew_managed_install() {
-        HOMEBREW_UPDATE_COMMAND
-    } else if is_mise_managed_install() {
-        MISE_UPDATE_COMMAND
-    } else if is_nix_managed_install() {
-        NIX_UPDATE_COMMAND
+    if is_homebrew_managed_install() || is_mise_managed_install() || is_nix_managed_install() {
+        DIRECT_FORK_INSTALL_COMMAND
     } else {
         HERDR_UPDATE_COMMAND
     }
@@ -1740,15 +1745,9 @@ pub(crate) fn update_install_instruction(install_command: &str) -> String {
         HERDR_UPDATE_COMMAND => {
             "detach, run `herdr update`, then follow its restart guidance".to_string()
         }
-        HOMEBREW_UPDATE_COMMAND => {
-            "detach, run `brew update && brew upgrade herdr`, then restart this Herdr session when ready".to_string()
-        }
-        MISE_UPDATE_COMMAND => {
-            "detach, run `mise upgrade herdr`, then restart this Herdr session when ready"
+        DIRECT_FORK_INSTALL_COMMAND => {
+            "detach, run the pk-herdr direct installer, then restart this Herdr session when ready"
                 .to_string()
-        }
-        NIX_UPDATE_COMMAND => {
-            "detach, update through Nix, then restart this Herdr session when ready".to_string()
         }
         command => format!("detach, run `{command}`, then restart this Herdr session when ready"),
     }
@@ -1788,31 +1787,17 @@ pub(crate) fn preview_channel_rejection_for_current_install() -> Option<&'static
 
 pub(crate) fn package_manager_channel_update_guidance_for_current_install() -> Option<&'static str>
 {
-    if is_homebrew_managed_install() {
-        Some("Use `brew update && brew upgrade herdr` to update Homebrew installs.")
-    } else if is_mise_managed_install() {
-        Some("Use `mise upgrade herdr` to update mise installs.")
-    } else if is_nix_managed_install() {
-        Some("Update through Nix to update Nix-managed Herdr installs.")
-    } else {
-        None
-    }
+    (is_homebrew_managed_install() || is_mise_managed_install() || is_nix_managed_install())
+        .then_some(PACKAGE_MANAGER_FORK_UPDATE_GUIDANCE)
 }
 
 fn preview_channel_rejection_for_exe_path(path: &Path) -> Option<&'static str> {
-    if is_homebrew_managed_exe_path_following_links(path) {
-        Some(
-            "preview channel is only available for direct Herdr installs; Homebrew installs update through `brew update && brew upgrade herdr`",
-        )
-    } else if is_mise_managed_exe_path_following_links(path) {
-        Some(
-            "preview channel is only available for direct Herdr installs; mise installs update through `mise upgrade herdr`",
-        )
-    } else if is_nix_store_exe_path_following_links(path) {
-        Some("preview channel is only available for direct Herdr installs; Nix installs update through Nix")
-    } else {
-        None
-    }
+    (is_homebrew_managed_exe_path_following_links(path)
+        || is_mise_managed_exe_path_following_links(path)
+        || is_nix_store_exe_path_following_links(path))
+    .then_some(
+        "preview channel is only available for direct pk-herdr installs; package-manager installs do not receive pk-herdr previews",
+    )
 }
 
 #[cfg(unix)]
@@ -1952,37 +1937,10 @@ pub fn self_update(options: SelfUpdateOptions) -> Result<Version, String> {
         );
     }
 
-    if is_homebrew_managed_install() {
-        if channel == UpdateChannel::Preview {
-            return Err(
-                "self-update is disabled for Homebrew installs; preview is only available for direct Herdr installs".into(),
-            );
-        }
+    if is_homebrew_managed_install() || is_mise_managed_install() || is_nix_managed_install() {
         return Err(format!(
-            "self-update is disabled for Homebrew installs; run `{HOMEBREW_UPDATE_COMMAND}`"
+            "self-update is disabled for package-manager installs. {PACKAGE_MANAGER_FORK_UPDATE_GUIDANCE} Run `{DIRECT_FORK_INSTALL_COMMAND}` to switch to direct fork updates."
         ));
-    }
-
-    if is_mise_managed_install() {
-        if channel == UpdateChannel::Preview {
-            return Err(
-                "self-update is disabled for mise installs; preview is only available for direct Herdr installs".into(),
-            );
-        }
-        return Err(format!(
-            "self-update is disabled for mise installs; run `{MISE_UPDATE_COMMAND}`"
-        ));
-    }
-
-    if is_nix_managed_install() {
-        if channel == UpdateChannel::Preview {
-            return Err(
-                "self-update is disabled for Nix installs; preview is only available for direct Herdr installs".into(),
-            );
-        }
-        return Err(
-            "self-update is disabled for Nix installs; update with `nix profile upgrade` or update the flake input that provides Herdr".into(),
-        );
     }
 
     if running_inside_herdr() {
@@ -2102,25 +2060,12 @@ pub fn auto_update(events: tokio::sync::mpsc::Sender<crate::events::AppEvent>) {
     }
 
     let configured_channel = UpdateChannel::configured();
-    if is_homebrew_managed_install() {
-        if configured_channel == UpdateChannel::Preview {
-            crate::logging::update_check_failed(
-                "preview channel is not available for Homebrew installs",
-            );
-            return;
-        }
-        auto_update_homebrew(events);
-        return;
-    }
-
-    if is_mise_managed_install() && configured_channel == UpdateChannel::Preview {
-        crate::logging::update_check_failed("preview channel is not available for mise installs");
-        return;
-    }
-
-    let nix_managed_install = is_nix_managed_install();
-    if nix_managed_install && configured_channel == UpdateChannel::Preview {
-        crate::logging::update_check_failed("preview channel is not available for Nix installs");
+    if configured_channel == UpdateChannel::Preview
+        && (is_homebrew_managed_install() || is_mise_managed_install() || is_nix_managed_install())
+    {
+        crate::logging::update_check_failed(
+            "preview channel is only available for direct pk-herdr installs",
+        );
         return;
     }
 
@@ -2156,38 +2101,13 @@ pub fn auto_update(events: tokio::sync::mpsc::Sender<crate::events::AppEvent>) {
     });
 }
 
-fn auto_update_homebrew(events: tokio::sync::mpsc::Sender<crate::events::AppEvent>) {
-    let version = match check_homebrew_latest() {
-        Ok(Some(version)) => version,
-        Ok(None) => return,
-        Err(err) => {
-            crate::logging::update_check_failed(&err);
-            return;
-        }
-    };
-
-    crate::logging::update_available(&version.to_string());
-    let notes_body = homebrew_release_notes_body(&version);
-    if let Err(e) = crate::release_notes::save_pending(&version.to_string(), &notes_body) {
-        tracing::warn!("failed to save pending release notes: {e}");
-    }
-
-    tracing::info!(
-        "auto-update check: v{} available through Homebrew, waiting for explicit install",
-        version
-    );
-
-    let _ = events.blocking_send(crate::events::AppEvent::UpdateReady {
-        version: version.to_string(),
-        install_command: HOMEBREW_UPDATE_COMMAND.to_string(),
-    });
-}
-
+#[cfg(all(test, unix))]
 fn homebrew_release_notes_body(version: &Version) -> String {
     let manifest = fetch_update_manifest().ok();
     homebrew_release_notes_body_from_manifest(version, manifest.as_ref())
 }
 
+#[cfg(all(test, unix))]
 fn homebrew_release_notes_body_from_manifest(
     version: &Version,
     manifest: Option<&UpdateManifest>,
@@ -2232,6 +2152,98 @@ fn platform_target() -> (&'static str, &'static str) {
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod fork_update_tests {
+    use super::*;
+
+    fn manifest_with_platform_asset(version: &str, url: &str) -> UpdateManifest {
+        let (os, arch) = platform_target();
+        let mut assets = serde_json::Map::new();
+        assets.insert(
+            format!("{os}-{arch}"),
+            serde_json::Value::String(url.to_string()),
+        );
+
+        let mut manifest = serde_json::Map::new();
+        manifest.insert(
+            "version".to_string(),
+            serde_json::Value::String(version.to_string()),
+        );
+        manifest.insert(
+            "notes".to_string(),
+            serde_json::Value::String("### Changed\n- One".to_string()),
+        );
+        manifest.insert("assets".to_string(), serde_json::Value::Object(assets));
+
+        serde_json::from_value(serde_json::Value::Object(manifest))
+            .expect("test manifest should deserialize")
+    }
+
+    fn preview_manifest_with_platform_asset(url: &str) -> PreviewManifest {
+        let (os, arch) = platform_target();
+        let mut assets = serde_json::Map::new();
+        assets.insert(format!("{os}-{arch}"), serde_json::json!({ "url": url }));
+
+        let mut manifest = serde_json::Map::new();
+        manifest.insert(
+            "channel".to_string(),
+            serde_json::Value::String("preview".to_string()),
+        );
+        manifest.insert(
+            "base_version".to_string(),
+            serde_json::Value::String("99.0.0".to_string()),
+        );
+        manifest.insert(
+            "build_id".to_string(),
+            serde_json::Value::String("2026-07-01-fork-test".to_string()),
+        );
+        manifest.insert(
+            "commit".to_string(),
+            serde_json::Value::String("abcdef".to_string()),
+        );
+        manifest.insert(
+            "built_at".to_string(),
+            serde_json::Value::String("2026-07-01T00:00:00Z".to_string()),
+        );
+        manifest.insert(
+            "protocol".to_string(),
+            serde_json::Value::Number(serde_json::Number::from(1)),
+        );
+        manifest.insert(
+            "notes".to_string(),
+            serde_json::Value::String("### Changed\n- One".to_string()),
+        );
+        manifest.insert("assets".to_string(), serde_json::Value::Object(assets));
+
+        serde_json::from_value(serde_json::Value::Object(manifest))
+            .expect("test preview manifest should deserialize")
+    }
+
+    #[test]
+    fn stable_manifest_rejects_original_upstream_asset_urls() {
+        let manifest = manifest_with_platform_asset(
+            "99.0.0",
+            "https://github.com/ogulcancelik/herdr/releases/download/v99.0.0/herdr-linux-x86_64",
+        );
+
+        let err = release_info_from_manifest(&manifest).expect_err("upstream asset is rejected");
+
+        assert!(err.contains("kingkillery/pk-herdr"));
+    }
+
+    #[test]
+    fn preview_manifest_rejects_original_upstream_asset_urls() {
+        let manifest = preview_manifest_with_platform_asset(
+            "https://github.com/ogulcancelik/herdr/releases/download/preview-2026-07-01-fork-test/herdr-windows-x86_64.exe",
+        );
+
+        let err =
+            release_info_from_preview_manifest(&manifest).expect_err("upstream asset is rejected");
+
+        assert!(err.contains("kingkillery/pk-herdr"));
+    }
+}
 
 #[cfg(all(test, unix))]
 mod tests {
@@ -2506,12 +2518,10 @@ mod tests {
         let nix = Path::new("/nix/store/abc123-herdr-0.6.6/bin/herdr");
         let direct = Path::new("/home/user/.local/bin/herdr");
 
-        assert!(preview_channel_rejection_for_exe_path(homebrew)
-            .is_some_and(|message| message.contains("Homebrew")));
-        assert!(preview_channel_rejection_for_exe_path(mise)
-            .is_some_and(|message| message.contains("mise")));
-        assert!(preview_channel_rejection_for_exe_path(nix)
-            .is_some_and(|message| message.contains("Nix")));
+        for path in [homebrew, mise, nix] {
+            assert!(preview_channel_rejection_for_exe_path(path)
+                .is_some_and(|message| message.contains("direct pk-herdr installs")));
+        }
         assert!(preview_channel_rejection_for_exe_path(direct).is_none());
     }
 
@@ -2592,12 +2602,8 @@ mod tests {
             "detach, run `herdr update`, then follow its restart guidance"
         );
         assert_eq!(
-            update_install_instruction(HOMEBREW_UPDATE_COMMAND),
-            "detach, run `brew update && brew upgrade herdr`, then restart this Herdr session when ready"
-        );
-        assert_eq!(
-            update_install_instruction(MISE_UPDATE_COMMAND),
-            "detach, run `mise upgrade herdr`, then restart this Herdr session when ready"
+            update_install_instruction(DIRECT_FORK_INSTALL_COMMAND),
+            "detach, run the pk-herdr direct installer, then restart this Herdr session when ready"
         );
     }
 

@@ -83,6 +83,7 @@ mod protocol;
 mod pty;
 mod raw_input;
 mod release_notes;
+mod release_source;
 mod remote;
 mod render_prof;
 mod selection;
@@ -147,10 +148,10 @@ const DEFAULT_CONFIG: &str = r##"# herdr configuration
 # Use "stable" for normal releases or "preview" for opt-in preview builds.
 # channel = "stable"
 
-# Check herdr.dev for new Herdr versions in the background.
+# Check the pk-herdr fork manifest for new Herdr versions in the background.
 # version_check = true
 
-# Check herdr.dev for remote agent-detection manifest updates in the background.
+# Check the pk-herdr fork catalog for remote agent-detection manifest updates in the background.
 # manifest_check = true
 
 [keys]
@@ -596,7 +597,7 @@ fn main() -> io::Result<()> {
         println!("Config: {}", config::config_path().display());
         println!("Logs:   {}", logging::help_log_paths_summary());
         println!("Env:    HERDR_CONFIG_PATH overrides config file path");
-        println!("Home:   https://herdr.dev");
+        println!("Home:   https://herdr.pkking.computer");
         return Ok(());
     }
 

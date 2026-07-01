@@ -1,0 +1,15 @@
+{
+  "name": "pk-herdr",
+  "main": "./src/worker.js",
+  "compatibility_date": "2026-07-01",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS"
+  },
+  "routes": [
+    {
+      "pattern": "herdr.pkking.computer",
+      "custom_domain": true
+    }
+  ]
+}

@@ -20,6 +20,10 @@ if ($Channel -notin @("stable", "preview")) {
 }
 
 $HerdrCommandAliases = @("pk-herd", "herd")
+$DefaultStableManifestUrl = "https://herdr.pkking.computer/latest.json"
+$DefaultPreviewManifestUrl = "https://herdr.pkking.computer/preview.json"
+$ReleaseAssetUrlPrefix = "https://github.com/kingkillery/pk-herdr/releases/download/"
+
 
 
 function Write-Step {
@@ -109,6 +113,21 @@ function Prepend-PathEntry {
     return ($segments -join ";")
 }
 
+function Assert-HerdrReleaseAssetUrl {
+    param(
+        [string]$Url,
+        [string]$Target
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Url)) {
+        throw "Release manifest asset $Target is missing a URL."
+    }
+
+    if (-not $Url.StartsWith($ReleaseAssetUrlPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "Release manifest asset $Target must come from kingkillery/pk-herdr: $Url"
+    }
+}
+
 function Get-ManifestAsset {
     param(
         [object]$Manifest,
@@ -122,18 +141,19 @@ function Get-ManifestAsset {
 
     $asset = $property.Value
     if ($asset -is [string]) {
+        $url = [string]$asset
+        Assert-HerdrReleaseAssetUrl -Url $url -Target $Target
         return [PSCustomObject]@{
-            Url = $asset
+            Url = $url
             Sha256 = $null
         }
     }
 
-    if ([string]::IsNullOrWhiteSpace([string]$asset.url)) {
-        throw "Release manifest asset $Target is missing a URL."
-    }
+    $url = [string]$asset.url
+    Assert-HerdrReleaseAssetUrl -Url $url -Target $Target
 
     return [PSCustomObject]@{
-        Url = [string]$asset.url
+        Url = $url
         Sha256 = if ([string]::IsNullOrWhiteSpace([string]$asset.sha256)) { $null } else { [string]$asset.sha256 }
     }
 }
@@ -425,9 +445,9 @@ switch ($architecture) {
 
 if ([string]::IsNullOrWhiteSpace($ManifestUrl)) {
     $ManifestUrl = if ($Channel -eq "preview") {
-        "https://herdr.dev/preview.json"
+        $DefaultPreviewManifestUrl
     } else {
-        "https://herdr.dev/latest.json"
+        $DefaultStableManifestUrl
     }
 }
 

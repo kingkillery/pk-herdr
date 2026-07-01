@@ -31,7 +31,7 @@ class PreviewNotesTests(unittest.TestCase):
             notes = "Preview notes\n"
             content = preview.build_manifest(
                 output=output,
-                repo="ogulcancelik/herdr",
+                repo="kingkillery/pk-herdr",
                 tag="preview-2026-06-02-abcdef123456",
                 build_id="2026-06-02-abcdef123456",
                 commit="abcdef1234567890",
@@ -51,7 +51,7 @@ class PreviewNotesTests(unittest.TestCase):
             )
             self.assertEqual(
                 data["assets"]["windows-x86_64"]["url"],
-                "https://github.com/ogulcancelik/herdr/releases/download/preview-2026-06-02-abcdef123456/herdr-windows-x86_64.exe",
+                "https://github.com/kingkillery/pk-herdr/releases/download/preview-2026-06-02-abcdef123456/herdr-windows-x86_64.exe",
             )
             self.assertIn("2026-06-02-abcdef123456", data["builds"])
 
@@ -151,6 +151,16 @@ file: ../../../public/assets/logo.svg
         )
         self.assertIn("[Install](/docs/preview/install/)", output)
         self.assertIn("file: ../../../../public/assets/logo.svg", output)
+        self.assertIn("Preview docs describe unreleased preview builds", output)
+
+    def test_preview_docs_rewrite_preserves_crlf_frontmatter(self):
+        source = b"---\r\ntitle: Install Herdr\r\n---\r\n\r\n[Install](/docs/install/)\r\n"
+        output = subprocess.check_output(
+            ["node", "website/scripts/prepare-docs.mjs", "--rewrite-preview-doc-fixture"],
+            input=source,
+        ).decode()
+        self.assertTrue(output.startswith("---"))
+        self.assertIn("title: Install Herdr", output)
         self.assertIn("Preview docs describe unreleased preview builds", output)
 
 

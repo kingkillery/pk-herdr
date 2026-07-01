@@ -3,14 +3,15 @@ set -eu
 
 BIN="herdr"
 ALIAS_BINS="pk-herd herd"
-MANIFEST_URL="https://herdr.dev/latest.json"
+MANIFEST_URL="https://herdr.pkking.computer/latest.json"
+RELEASE_URL_PREFIX="https://github.com/kingkillery/pk-herdr/releases/download/"
 INSTALL_DIR="${HERDR_INSTALL_DIR:-$HOME/.local/bin}"
 
 main() {
     echo ""
     echo "      ,ww"
     echo "     wWWWWWWW_)  herdr installer"
-    echo "     \`WWWWWW'    herdr.dev"
+    echo "     \`WWWWWW'    herdr.pkking.computer"
     echo "      II  II"
     echo ""
 
@@ -40,7 +41,7 @@ main() {
     TARGET="${os}-${arch}"
     log "fetching latest release manifest..."
     MANIFEST="$(curl -fsSL --retry 3 --connect-timeout 10 --max-time 20 "$MANIFEST_URL")" \
-        || err "can't reach ${MANIFEST_URL}. Please try again later; herdr.dev might be down. Who let the sheeps out? baaa."
+        || err "can't reach ${MANIFEST_URL}. Please try again later."
     URL="$(printf '%s\n' "$MANIFEST" | awk -v target="\"${TARGET}\"" '
         /^[[:space:]]*"assets"[[:space:]]*:/ { in_assets = 1; next }
         in_assets && /^[[:space:]]*}/ { exit }
@@ -56,6 +57,11 @@ main() {
     if [ -z "$URL" ]; then
         err "release manifest does not include a binary for ${TARGET}"
     fi
+    case "$URL" in
+        "$RELEASE_URL_PREFIX"*) ;;
+        *) err "release manifest asset URL must come from kingkillery/pk-herdr: ${URL}" ;;
+    esac
+
 
     if [ -n "$VERSION" ]; then
         log "downloading v${VERSION}..."
@@ -107,7 +113,7 @@ err()  { printf '  \033[31m✗\033[0m %s\n' "$1" >&2; exit 1; }
 
 need() {
     if ! command -v "$1" >/dev/null 2>&1; then
-        err "requires '$1' — install it first, or download a binary manually from https://herdr.dev/docs/install/"
+        err "requires '$1' — install it first, or download a binary manually from https://github.com/kingkillery/pk-herdr/releases"
     fi
 }
 

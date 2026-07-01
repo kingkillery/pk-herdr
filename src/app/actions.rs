@@ -4838,17 +4838,17 @@ mod tests {
 
         state.handle_app_event(AppEvent::UpdateReady {
             version: "0.5.0".into(),
-            install_command: "brew update && brew upgrade herdr".into(),
+            install_command: "curl -fsSL https://herdr.pkking.computer/install.sh | sh".into(),
         });
 
         assert_eq!(
             state.update_install_command,
-            "brew update && brew upgrade herdr"
+            "curl -fsSL https://herdr.pkking.computer/install.sh | sh"
         );
         let toast = state.toast.as_ref().expect("update toast");
         assert_eq!(
             toast.context,
-            "detach, run `brew update && brew upgrade herdr`, then restart this Herdr session when ready"
+            "detach, run the pk-herdr direct installer, then restart this Herdr session when ready"
         );
     }
 

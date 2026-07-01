@@ -20,8 +20,8 @@ const BRIDGE_SOCKET_PERMISSION_MODE: u32 = 0o600;
 const REMOTE_SERVER_SHUTDOWN_CONFIRM_TIMEOUT: Duration = Duration::from_secs(5);
 const REMOTE_SERVER_SHUTDOWN_POLL_INTERVAL: Duration = Duration::from_millis(100);
 const CURRENT_PROTOCOL: u32 = crate::protocol::PROTOCOL_VERSION;
-const STABLE_UPDATE_MANIFEST_URL: &str = "https://herdr.dev/latest.json";
-const PREVIEW_UPDATE_MANIFEST_URL: &str = "https://herdr.dev/preview.json";
+const STABLE_UPDATE_MANIFEST_URL: &str = crate::release_source::STABLE_UPDATE_MANIFEST_URL;
+const PREVIEW_UPDATE_MANIFEST_URL: &str = crate::release_source::PREVIEW_UPDATE_MANIFEST_URL;
 const REMOTE_BINARY_ENV_VAR: &str = "HERDR_REMOTE_BINARY";
 const SSH_CONTROL_SOCKET_NAME: &str = "ctl";
 pub(crate) const REATTACH_COMMAND_ENV_VAR: &str = "HERDR_REATTACH_COMMAND";
@@ -1446,11 +1446,13 @@ fn fetch_remote_manifest(url: &str) -> io::Result<Vec<u8>> {
     Ok(output.stdout)
 }
 
-fn remote_asset_info(asset: &RemoteAssetRef) -> RemoteReleaseAsset {
-    RemoteReleaseAsset {
-        url: asset.url().to_string(),
+fn remote_asset_info(asset: &RemoteAssetRef) -> io::Result<RemoteReleaseAsset> {
+    let url = asset.url();
+    crate::release_source::validate_release_asset_url(url).map_err(io::Error::other)?;
+    Ok(RemoteReleaseAsset {
+        url: url.to_string(),
         sha256: asset.sha256().map(str::to_string),
-    }
+    })
 }
 
 fn preview_assets_for_build<'a>(
@@ -1484,11 +1486,12 @@ fn remote_release_asset(asset_key: &str) -> io::Result<RemoteReleaseAsset> {
                 "preview manifest has build {build_id} protocol {protocol}, but this client needs protocol {CURRENT_PROTOCOL}; set {REMOTE_BINARY_ENV_VAR}=target/release/herdr or install a matching Herdr on the remote host manually"
             )));
         }
-        return assets.get(asset_key).map(remote_asset_info).ok_or_else(|| {
+        let asset = assets.get(asset_key).ok_or_else(|| {
             io::Error::other(format!(
                 "no {asset_key} binary in the preview manifest for build {build_id}"
             ))
-        });
+        })?;
+        return remote_asset_info(asset);
     }
 
     let current_version = current_version();
@@ -1508,15 +1511,12 @@ fn remote_release_asset(asset_key: &str) -> io::Result<RemoteReleaseAsset> {
             )));
         }
     }
-    release
-        .assets
-        .get(asset_key)
-        .map(remote_asset_info)
-        .ok_or_else(|| {
-            io::Error::other(format!(
-                "no {asset_key} binary in the release manifest for herdr {current_version}"
-            ))
-        })
+    let asset = release.assets.get(asset_key).ok_or_else(|| {
+        io::Error::other(format!(
+            "no {asset_key} binary in the release manifest for herdr {current_version}"
+        ))
+    })?;
+    remote_asset_info(asset)
 }
 
 fn private_download_dir(asset_key: &str) -> io::Result<PathBuf> {

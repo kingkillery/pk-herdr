@@ -87,7 +87,7 @@ function insertPreviewNotice(content, relativePath) {
     relativePath === 'index.mdx'
       ? content.replace('title: Herdr documentation', 'title: Herdr preview documentation')
       : content;
-  const frontmatter = indexPrefix.match(/^---\n[\s\S]*?\n---\n/);
+  const frontmatter = indexPrefix.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n/);
   if (!frontmatter) {
     return insertNoticeAfterImports(indexPrefix, notice);
   }
