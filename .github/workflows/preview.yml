@@ -326,6 +326,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: 4.80.0
           command: |
             r2 object put pk-herdr-releases/releases/download/${{ needs.preflight.outputs.tag }}/herdr-linux-x86_64 --file artifacts/herdr-linux-x86_64/herdr-linux-x86_64 --content-type application/octet-stream --content-disposition "attachment; filename=herdr-linux-x86_64" --cache-control "public, max-age=31536000, immutable" --remote
             r2 object put pk-herdr-releases/releases/download/${{ needs.preflight.outputs.tag }}/herdr-linux-aarch64 --file artifacts/herdr-linux-aarch64/herdr-linux-aarch64 --content-type application/octet-stream --content-disposition "attachment; filename=herdr-linux-aarch64" --cache-control "public, max-age=31536000, immutable" --remote
@@ -373,6 +374,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: 4.80.0
           workingDirectory: website
           command: deploy
 
