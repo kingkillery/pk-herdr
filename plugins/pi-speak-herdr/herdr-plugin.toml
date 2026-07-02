@@ -1,6 +1,6 @@
 id = "pk.pi-speak"
 name = "Pi Speak"
-version = "0.1.0"
+version = "0.2.0"
 min_herdr_version = "0.7.0"
 description = "Pi Speak phone, voice, and routing helpers for Herdr panes"
 platforms = ["linux", "macos", "windows"]
@@ -35,3 +35,23 @@ id = "gateway"
 title = "Pi Speak gateway"
 placement = "tab"
 command = ["pk-speak", "gateway"]
+
+# --- Agent Hub panes (interactive => panes, never actions) ---
+
+[[panes]]
+id = "agent-hub"
+title = "oh-my-pi Agent Hub"
+placement = "tab"
+command = ["node", "index.cjs", "pane:agent-hub"]
+
+[[panes]]
+id = "agent-chat"
+title = "Agent transcript"
+placement = "overlay"
+command = ["node", "index.cjs", "pane:agent-chat"]
+
+[[panes]]
+id = "agent-stream"
+title = "Agent live stream"
+placement = "tab"
+command = ["node", "index.cjs", "pane:agent-stream"]
