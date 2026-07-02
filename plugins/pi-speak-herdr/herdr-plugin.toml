@@ -1,0 +1,37 @@
+id = "pk.pi-speak"
+name = "Pi Speak"
+version = "0.1.0"
+min_herdr_version = "0.7.0"
+description = "Pi Speak phone, voice, and routing helpers for Herdr panes"
+platforms = ["linux", "macos", "windows"]
+
+
+[[actions]]
+id = "speak-selection"
+title = "Speak selected text"
+contexts = ["pane", "selection", "link"]
+command = ["node", "index.cjs", "speak-selection"]
+
+[[actions]]
+id = "route-current-pane"
+title = "Mark current pane as Pi Speak route target"
+contexts = ["pane"]
+command = ["node", "index.cjs", "route-current-pane"]
+
+[[panes]]
+id = "mobile"
+title = "Pi Speak mobile setup"
+placement = "overlay"
+command = ["pk-speak", "mobile"]
+
+[[panes]]
+id = "doctor"
+title = "Pi Speak doctor"
+placement = "overlay"
+command = ["pk-speak", "doctor"]
+
+[[panes]]
+id = "gateway"
+title = "Pi Speak gateway"
+placement = "tab"
+command = ["pk-speak", "gateway"]
