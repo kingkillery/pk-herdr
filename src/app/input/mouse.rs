@@ -2377,7 +2377,8 @@ mod tests {
 
     #[tokio::test]
     async fn session_summary_menu_action_rechecks_current_agent() {
-        let cases: [(&str, fn(&mut crate::terminal::TerminalState)); 2] = [
+        type ConfigureTerminal = fn(&mut crate::terminal::TerminalState);
+        let cases: [(&str, ConfigureTerminal); 2] = [
             ("blocked", |terminal| {
                 terminal.set_detected_state(Some(Agent::Claude), AgentState::Blocked);
             }),

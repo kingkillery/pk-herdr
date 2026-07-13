@@ -1,6 +1,7 @@
 pub(crate) const RELEASE_REPOSITORY: &str = "kingkillery/pk-herdr";
 pub(crate) const STABLE_UPDATE_MANIFEST_URL: &str = "https://herdr.pkking.computer/latest.json";
 pub(crate) const PREVIEW_UPDATE_MANIFEST_URL: &str = "https://herdr.pkking.computer/preview.json";
+#[cfg(windows)]
 pub(crate) const WINDOWS_INSTALL_SCRIPT_COMMAND: &str =
     "irm https://herdr.pkking.computer/install.ps1 | iex";
 

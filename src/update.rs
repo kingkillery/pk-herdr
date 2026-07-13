@@ -25,8 +25,6 @@ use serde::{Deserialize, Deserializer};
 
 const STABLE_UPDATE_MANIFEST_URL: &str = crate::release_source::STABLE_UPDATE_MANIFEST_URL;
 const PREVIEW_UPDATE_MANIFEST_URL: &str = crate::release_source::PREVIEW_UPDATE_MANIFEST_URL;
-#[cfg(all(test, unix))]
-const HOMEBREW_FORMULA_API_URL: &str = "https://formulae.brew.sh/api/formula/herdr.json";
 const HERDR_UPDATE_COMMAND: &str = "herdr update";
 const DIRECT_FORK_INSTALL_COMMAND: &str =
     "curl -fsSL https://herdr.pkking.computer/install.sh | sh";
@@ -511,31 +509,6 @@ fn homebrew_update_from_formula_json(
     }
 
     Ok(Some(latest))
-}
-
-#[cfg(all(test, unix))]
-fn check_homebrew_latest() -> Result<Option<Version>, String> {
-    let current = Version::current();
-
-    let output = Command::new("curl")
-        .args([
-            "-sfL",
-            "--retry",
-            "2",
-            "--connect-timeout",
-            "5",
-            "--max-time",
-            "10",
-            HOMEBREW_FORMULA_API_URL,
-        ])
-        .output()
-        .map_err(|e| format!("curl failed: {e}"))?;
-
-    if !output.status.success() {
-        return Err("failed to fetch Homebrew formula JSON".into());
-    }
-
-    homebrew_update_from_formula_json(&output.stdout, &current)
 }
 
 // ---------------------------------------------------------------------------
@@ -2099,12 +2072,6 @@ pub fn auto_update(events: tokio::sync::mpsc::Sender<crate::events::AppEvent>) {
         version: release.label().to_string(),
         install_command: update_install_command().to_string(),
     });
-}
-
-#[cfg(all(test, unix))]
-fn homebrew_release_notes_body(version: &Version) -> String {
-    let manifest = fetch_update_manifest().ok();
-    homebrew_release_notes_body_from_manifest(version, manifest.as_ref())
 }
 
 #[cfg(all(test, unix))]
