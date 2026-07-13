@@ -2116,7 +2116,15 @@ prefix = "n"
         let kb = config.keybinds();
 
         assert!(diagnostics.is_empty(), "{diagnostics:?}");
-        assert!(kb.next_tab.bindings.is_empty());
+        // The default prefix+n rhs is displaced by the new prefix key; the
+        // unrelated ctrl+pagedown default remains.
+        assert_eq!(
+            binding_triggers(&kb.next_tab),
+            vec![BindingTrigger::Direct((
+                KeyCode::PageDown,
+                KeyModifiers::CONTROL
+            ))]
+        );
     }
 
     #[test]
