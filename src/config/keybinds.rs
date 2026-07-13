@@ -37,7 +37,7 @@ impl BindingConfig {
         Self::One(String::new())
     }
 
-    fn values(&self) -> Vec<&str> {
+    pub(crate) fn values(&self) -> Vec<&str> {
         match self {
             Self::One(value) => vec![value.as_str()],
             Self::Many(values) => values.iter().map(String::as_str).collect(),

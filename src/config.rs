@@ -178,7 +178,16 @@ prefix = "n"
 
         assert!(profile.contains("prefix = \"n\""));
         assert!(!profile.contains("next_tab = \"prefix+n\""));
-        assert!(round_tripped.keybinds().next_tab.bindings.is_empty());
+        // The prefix+n rhs is displaced by the new prefix key; the unrelated
+        // ctrl+pagedown default survives.
+        let kb = round_tripped.keybinds();
+        let next_tab_labels: Vec<_> = kb
+            .next_tab
+            .bindings
+            .iter()
+            .map(|binding| binding.label.as_str())
+            .collect();
+        assert_eq!(next_tab_labels, vec!["ctrl+pagedown"]);
     }
 
     #[test]
@@ -244,8 +253,17 @@ command = "echo next"
 
         assert!(!profile.contains("[[keys.command]]"));
         assert!(!profile.contains("command ="));
-        assert!(profile.contains("next_tab = \"\""));
-        assert!(round_tripped.keybinds().next_tab.bindings.is_empty());
+        assert!(!profile.contains("next_tab = \"prefix+n\""));
+        // The command displaces prefix+n only; the ctrl+pagedown default
+        // survives in the profile.
+        let kb = round_tripped.keybinds();
+        let next_tab_labels: Vec<_> = kb
+            .next_tab
+            .bindings
+            .iter()
+            .map(|binding| binding.label.as_str())
+            .collect();
+        assert_eq!(next_tab_labels, vec!["ctrl+pagedown"]);
     }
 
     #[test]

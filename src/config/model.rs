@@ -627,8 +627,8 @@ impl KeysConfig {
             ($field:ident, $target:expr) => {
                 if self.user_fields.contains(stringify!($field)) {
                     profile.$field = Some(self.$field.clone());
-                } else if binding_config_is_effective(&self.$field, &$target) {
-                    profile.$field = Some(self.$field.clone());
+                } else if let Some(effective) = effective_action_config(&self.$field, &$target) {
+                    profile.$field = Some(effective);
                 } else if binding_config_has_values(&self.$field) {
                     profile.$field = Some(BindingConfig::empty());
                 }
@@ -709,8 +709,43 @@ fn binding_config_has_values(config: &BindingConfig) -> bool {
     config.has_values()
 }
 
-fn binding_config_is_effective(config: &BindingConfig, keybinds: &ActionKeybinds) -> bool {
-    !binding_config_has_values(config) || !keybinds.bindings.is_empty()
+/// Project a default action binding config onto its effective keybinds,
+/// keeping only the bindings that survived displacement. `None` means no
+/// default binding survived and the field must be written as disabled.
+fn effective_action_config(
+    config: &BindingConfig,
+    keybinds: &ActionKeybinds,
+) -> Option<BindingConfig> {
+    if !binding_config_has_values(config) {
+        return Some(config.clone());
+    }
+
+    let expected_labels: Vec<String> = config
+        .values()
+        .iter()
+        .map(|value| value.trim())
+        .filter(|value| !value.is_empty())
+        .map(str::to_string)
+        .collect();
+
+    let effective_labels: Vec<String> = expected_labels
+        .iter()
+        .filter(|expected| {
+            keybinds
+                .bindings
+                .iter()
+                .any(|binding| binding.label.as_str() == expected.as_str())
+        })
+        .cloned()
+        .collect();
+
+    if effective_labels.is_empty() {
+        None
+    } else if effective_labels.len() == expected_labels.len() {
+        Some(config.clone())
+    } else {
+        Some(BindingConfig::Many(effective_labels))
+    }
 }
 
 fn effective_indexed_config(
