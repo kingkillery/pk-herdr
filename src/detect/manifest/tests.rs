@@ -100,6 +100,52 @@ fn known_agent_no_match_defaults_to_idle_fallback() {
 }
 
 #[test]
+fn omp_spinner_esc_line_detects_working() {
+    // Evidence: live ompk panes (2026-07-13); spinner + dynamic status + esc
+    // hint, with bracket glyphs varying across omp builds.
+    let working = explain(
+        Agent::Omp,
+        "transcript text\n ⠏ Capturing omp idle-state evidence ⟦esc⟧\n╭── π  > ⬢ Fable 5 · ◒ med ▶──╮\n╰─ ─╯",
+    );
+    assert_eq!(working.state, AgentState::Working);
+    assert!(working.visible_working);
+
+    let alt_brackets = explain(
+        Agent::Omp,
+        " ⠹ Tracking worktree triage ⟨esc⟩\n╭──     GPT-5.6-Sol  ·  xhi ───╮\n╰─ ─╯",
+    );
+    assert_eq!(alt_brackets.state, AgentState::Working);
+
+    let idle = explain(
+        Agent::Omp,
+        "finished output\n╭── π  > ⬢ Fable 5 · ◒ med ▶──╮\n╰─ ─╯",
+    );
+    assert_eq!(idle.state, AgentState::Idle);
+
+    // Spinner text quoted inside transcript box borders must not match.
+    let quoted = explain(
+        Agent::Omp,
+        "│ ⠏ Capturing omp idle-state evidence ⟦esc⟧ │\n╭── π  > ⬢ Fable 5 ▶──╮\n╰─ ─╯",
+    );
+    assert_eq!(quoted.state, AgentState::Idle);
+
+    // A completed turn leaves a stale spinner line above its output and a
+    // "⤵ <in> ⤴ <out>" stats line below it; that must read as idle.
+    let stale = explain(
+        Agent::Omp,
+        " write a haiku\n\n ⠋ Working… ⟦esc⟧\n Terminals glow soft\n Cursors dream, then rest\n\n ⤵ 9.3K  ⤴ 21\n\n╭── π  > ⬢ GPT-5.6-Sol · ◉ xhigh ▶──╮\n╰─ ─╯",
+    );
+    assert_eq!(stale.state, AgentState::Idle);
+
+    // A live spinner above a todo panel (no stats line below it) is working.
+    let todo_panel = explain(
+        Agent::Omp,
+        " ⠹ Tracking worktree triage ⟨esc⟩\n\n   Todos\n   └ I. Inventory\n      Inventory fork tracked changes\n\n╭──     GPT-5.6-Sol  ·  xhi ───╮\n╰─ ─╯",
+    );
+    assert_eq!(todo_panel.state, AgentState::Working);
+}
+
+#[test]
 fn rule_semantics_apply_gates_priority_and_line_regex() {
     with_manifest_dirs("rule-semantics", || {
         write_local_codex(&rules_manifest(

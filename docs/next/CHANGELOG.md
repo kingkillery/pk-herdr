@@ -18,6 +18,7 @@
 
 ### Fixed
 - `herdr pane split --current` now resolves to the calling Herdr pane instead of the UI-focused pane when run inside a pane. (#902)
+- The `ompk` fork binary is now identified as the OMP agent, and OMP panes now get screen-based working/idle detection when the OMP integration is not reporting, such as on native Windows where the integration is unsupported.
 - Native Windows clients running inside Alacritty now preserve mouse reports and `ctrl+j` input instead of leaking mouse escape sequences into panes. `shift+enter` remains dependent on whether the outer terminal reports it as a distinct modified Enter key. (#792)
 - OMP integration state now recovers after resumed sessions such as `omp -c` and reports Ask/tool approval waits as blocked instead of leaving the pane working or stuck on the previous OMP session. (#879)
 - Remote attach now discovers compatible Homebrew, mise, and Nix profile installs before offering to install a sidecar binary to `~/.local/bin/herdr`. (#840)

@@ -1,0 +1,25 @@
+id = "omp"
+version = "2026.07.13.1"
+min_engine_version = 1
+updated_at = "2026-07-13T00:00:00Z"
+aliases = ["herdr:omp"]
+
+# Evidence: live ompk panes (2026-07-13). While working, omp renders a braille
+# spinner, a dynamic status phrase, and an esc-to-interrupt hint on one line,
+# e.g. "⠋ Working… ⟦esc⟧". The esc hint bracket glyphs vary across omp builds
+# (⟦esc⟧ and ⟨esc⟩ observed) and the status phrase is dynamic, so there is no
+# stable literal like pi's "Working...".
+#
+# Completed turns can leave a stale, non-animating spinner line in the
+# transcript. Each completed turn also prints a "⤵ <in> ⤴ <out>" token stats
+# line below its output, so only a spinner line with no later stats line is
+# live working chrome: the regex requires the spinner line to be followed only
+# by lines without "⤵" through the end of the region (todo panel, footer box,
+# blank lines), which a finished turn's stats line breaks.
+[[rules]]
+id = "working_spinner"
+state = "working"
+priority = 100
+region = "bottom_non_empty_lines(16)"
+visible_working = true
+regex = ['(?m)^\s*[⠀-⣿] \S[^\n]*(?:⟦esc⟧|⟨esc⟩)[^\n]*(?:\n[^⤵\n]*)*\z']
