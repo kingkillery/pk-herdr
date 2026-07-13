@@ -132,15 +132,15 @@ A small keybinding override looks like this:
 prefix = "ctrl+b"
 goto = "prefix+g"
 new_tab = "prefix+c"
-next_tab = "prefix+n"
-previous_tab = "prefix+p"
+next_tab = ["prefix+n", "ctrl+pagedown"]
+previous_tab = ["prefix+p", "ctrl+pageup"]
 focus_pane_left = "prefix+h"
 navigate_workspace_down = "j"
 navigate_pane_down = "ctrl+j"
 split_horizontal = "prefix+minus"
 ```
 
-The default keymap is prefix-first and avoids direct shortcuts that can steal input from shells, editors, tmux, or terminal apps. Common defaults include:
+The default keymap is mostly prefix-first. `ctrl+pagedown` and `ctrl+pageup` are direct shortcuts that cycle tabs across spaces and wrap at both ends. Common defaults include:
 
 ```toml
 [keys]
@@ -159,8 +159,8 @@ navigate_pane_up = "k"
 navigate_pane_right = "l"
 remote_image_paste = "ctrl+v"
 new_tab = "prefix+c"
-previous_tab = "prefix+p"
-next_tab = "prefix+n"
+previous_tab = ["prefix+p", "ctrl+pageup"]
+next_tab = ["prefix+n", "ctrl+pagedown"]
 switch_tab = "prefix+1..9"
 rename_tab = "prefix+shift+t"
 close_tab = "prefix+shift+x"

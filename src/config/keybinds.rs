@@ -1203,6 +1203,8 @@ pub(crate) fn parse_key_combo(s: &str) -> Option<KeyCombo> {
         "right" => KeyCode::Right,
         "up" => KeyCode::Up,
         "down" => KeyCode::Down,
+        "pageup" | "page_up" | "page-up" => KeyCode::PageUp,
+        "pagedown" | "page_down" | "page-down" => KeyCode::PageDown,
         "minus" => KeyCode::Char('-'),
         "comma" => KeyCode::Char(','),
         "period" => KeyCode::Char('.'),
@@ -1470,6 +1472,18 @@ prefix = "ö"
         assert_eq!(
             parse_key_combo("ampersand"),
             Some((KeyCode::Char('&'), KeyModifiers::empty()))
+        );
+    }
+
+    #[test]
+    fn parse_page_key_combos() {
+        assert_eq!(
+            parse_key_combo("ctrl+pageup"),
+            Some((KeyCode::PageUp, KeyModifiers::CONTROL))
+        );
+        assert_eq!(
+            parse_key_combo("ctrl+pagedown"),
+            Some((KeyCode::PageDown, KeyModifiers::CONTROL))
         );
     }
 
@@ -1989,22 +2003,23 @@ switch_tab = "prefix+?"
     }
 
     #[test]
-    fn default_keymap_is_prefix_first_and_tab_centered() {
+    fn default_keymap_keeps_prefix_actions_and_adds_direct_tab_cycle() {
         let kb = Config::default().keybinds();
         assert_eq!(
             binding_triggers(&kb.next_tab),
-            vec![BindingTrigger::Prefix((
-                KeyCode::Char('n'),
-                KeyModifiers::empty()
-            ))]
+            vec![
+                BindingTrigger::Prefix((KeyCode::Char('n'), KeyModifiers::empty())),
+                BindingTrigger::Direct((KeyCode::PageDown, KeyModifiers::CONTROL)),
+            ]
         );
         assert_eq!(
             binding_triggers(&kb.previous_tab),
-            vec![BindingTrigger::Prefix((
-                KeyCode::Char('p'),
-                KeyModifiers::empty()
-            ))]
+            vec![
+                BindingTrigger::Prefix((KeyCode::Char('p'), KeyModifiers::empty())),
+                BindingTrigger::Direct((KeyCode::PageUp, KeyModifiers::CONTROL)),
+            ]
         );
+
         assert_eq!(kb.switch_tab.len(), 9);
         assert!(kb
             .switch_tab

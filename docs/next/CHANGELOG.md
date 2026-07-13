@@ -13,6 +13,7 @@
 
 ### Changed
 - Bumped the client/server protocol version to 15 for socket API placement mutation event and response compatibility.
+- `ctrl+pagedown` and `ctrl+pageup` now cycle through every tab across spaces, wrapping from the final tab back to the first space (and vice versa).
 
 ### Fixed
 - `herdr pane split --current` now resolves to the calling Herdr pane instead of the UI-focused pane when run inside a pane. (#902)

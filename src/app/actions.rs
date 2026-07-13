@@ -874,6 +874,12 @@ fn activity_summary_for_panes<'a>(
 // Workspace operations
 // ---------------------------------------------------------------------------
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum TabCycleDirection {
+    Previous,
+    Next,
+}
+
 impl AppState {
     pub(crate) fn next_agent_metadata_expiry(&self) -> Option<std::time::Instant> {
         self.terminals
@@ -1238,25 +1244,45 @@ impl AppState {
         self.refresh_tab_bar_view();
     }
 
-    pub fn next_tab(&mut self) {
-        if let Some(ws) = self.active.and_then(|i| self.workspaces.get(i)) {
-            if !ws.tabs.is_empty() {
-                let next = (ws.active_tab + 1) % ws.tabs.len();
-                self.switch_tab(next);
+    pub(crate) fn next_tab_target(&self) -> Option<(usize, usize)> {
+        self.tab_cycle_target(TabCycleDirection::Next)
+    }
+
+    pub(crate) fn previous_tab_target(&self) -> Option<(usize, usize)> {
+        self.tab_cycle_target(TabCycleDirection::Previous)
+    }
+
+    fn tab_cycle_target(&self, direction: TabCycleDirection) -> Option<(usize, usize)> {
+        let active_ws_idx = self.active?;
+        let active_tab_idx = self.workspaces.get(active_ws_idx)?.active_tab;
+        let mut tabs = Vec::new();
+        for entry in crate::ui::workspace_list_entries_expanded(self) {
+            let crate::ui::WorkspaceListEntry::Workspace { ws_idx, .. } = entry;
+            for tab_idx in 0..self.workspaces.get(ws_idx)?.tabs.len() {
+                tabs.push((ws_idx, tab_idx));
             }
+        }
+
+        let current = tabs
+            .iter()
+            .position(|target| *target == (active_ws_idx, active_tab_idx))?;
+        let target = match direction {
+            TabCycleDirection::Previous if current == 0 => tabs.len() - 1,
+            TabCycleDirection::Previous => current - 1,
+            TabCycleDirection::Next => (current + 1) % tabs.len(),
+        };
+        tabs.get(target).copied()
+    }
+
+    pub fn next_tab(&mut self) {
+        if let Some((ws_idx, tab_idx)) = self.next_tab_target() {
+            self.switch_workspace_tab(ws_idx, tab_idx);
         }
     }
 
     pub fn previous_tab(&mut self) {
-        if let Some(ws) = self.active.and_then(|i| self.workspaces.get(i)) {
-            if !ws.tabs.is_empty() {
-                let prev = if ws.active_tab == 0 {
-                    ws.tabs.len() - 1
-                } else {
-                    ws.active_tab - 1
-                };
-                self.switch_tab(prev);
-            }
+        if let Some((ws_idx, tab_idx)) = self.previous_tab_target() {
+            self.switch_workspace_tab(ws_idx, tab_idx);
         }
     }
 

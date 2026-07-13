@@ -356,9 +356,9 @@ pub struct KeysConfig {
     pub new_tab: BindingConfig,
     /// Rename the active tab. Default: "prefix+shift+t".
     pub rename_tab: BindingConfig,
-    /// Select the previous tab. Default: "prefix+p".
+    /// Select the previous tab across workspaces. Defaults: "prefix+p" and "ctrl+pageup".
     pub previous_tab: BindingConfig,
-    /// Select the next tab. Default: "prefix+n".
+    /// Select the next tab across workspaces. Defaults: "prefix+n" and "ctrl+pagedown".
     pub next_tab: BindingConfig,
     /// Switch to tab 1-9. Default: "prefix+1..9".
     pub switch_tab: BindingConfig,
@@ -929,8 +929,8 @@ impl Default for KeysConfig {
             remote_image_paste: "ctrl+v".into(),
             new_tab: BindingConfig::one("prefix+c"),
             rename_tab: BindingConfig::one("prefix+shift+t"),
-            previous_tab: BindingConfig::one("prefix+p"),
-            next_tab: BindingConfig::one("prefix+n"),
+            previous_tab: BindingConfig::Many(vec!["prefix+p".into(), "ctrl+pageup".into()]),
+            next_tab: BindingConfig::Many(vec!["prefix+n".into(), "ctrl+pagedown".into()]),
             switch_tab: BindingConfig::one("prefix+1..9"),
             switch_workspace: BindingConfig::empty(),
             close_tab: BindingConfig::one("prefix+shift+x"),

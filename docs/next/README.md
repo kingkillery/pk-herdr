@@ -253,12 +253,12 @@ see the [integrations docs](https://herdr.pkking.computer/docs/integrations/) fo
 
 ## keybindings
 
-Press `ctrl+b` to enter prefix mode. Default actions are prefix-first and tmux-like:
+Press `ctrl+b` to enter prefix mode. Most default actions are prefix-first and tmux-like; `ctrl+pagedown` and `ctrl+pageup` directly cycle tabs across spaces:
 
 | key | action |
 |-----|--------|
 | `prefix+c` | new tab |
-| `prefix+n` / `prefix+p` | next / previous tab |
+| `ctrl+pagedown` / `ctrl+pageup` or `prefix+n` / `prefix+p` | next / previous tab across spaces |
 | `prefix+1..9` | switch tab |
 | `prefix+w` | workspace navigation |
 | `prefix+g` | session navigator |

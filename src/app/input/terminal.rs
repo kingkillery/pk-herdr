@@ -1191,4 +1191,97 @@ mod tests {
         // Forwarded to pane, so test runtime doesn't process it — scroll stays at bottom.
         assert_eq!(end_metrics.offset_from_bottom, 0);
     }
+
+    fn app_with_tabbed_workspaces() -> App {
+        let mut app = app_for_mouse_test();
+        let mut first = Workspace::test_new("first");
+        first.test_add_tab(Some("first-two"));
+        let mut second = Workspace::test_new("second");
+        second.test_add_tab(Some("second-two"));
+        app.state.workspaces = vec![first, second];
+        app.state.ensure_test_terminals();
+        app.state.active = Some(0);
+        app.state.selected = 0;
+        app.state.mode = Mode::Terminal;
+        app
+    }
+
+    #[test]
+    fn ctrl_page_down_enters_first_tab_of_next_workspace() {
+        let mut app = app_with_tabbed_workspaces();
+        app.state.switch_workspace_tab(0, 1);
+
+        app.handle_terminal_key_headless(TerminalKey::new(
+            KeyCode::PageDown,
+            KeyModifiers::CONTROL,
+        ));
+
+        assert_eq!(app.state.active, Some(1));
+        assert_eq!(app.state.workspaces[1].active_tab, 0);
+    }
+
+    #[test]
+    fn ctrl_page_down_wraps_to_first_workspace_and_tab() {
+        let mut app = app_with_tabbed_workspaces();
+        app.state.switch_workspace_tab(1, 1);
+
+        app.handle_terminal_key_headless(TerminalKey::new(
+            KeyCode::PageDown,
+            KeyModifiers::CONTROL,
+        ));
+
+        assert_eq!(app.state.active, Some(0));
+        assert_eq!(app.state.workspaces[0].active_tab, 0);
+    }
+
+    #[test]
+    fn ctrl_page_up_enters_last_tab_of_previous_workspace() {
+        let mut app = app_with_tabbed_workspaces();
+        app.state.switch_workspace_tab(1, 0);
+
+        app.handle_terminal_key_headless(TerminalKey::new(KeyCode::PageUp, KeyModifiers::CONTROL));
+
+        assert_eq!(app.state.active, Some(0));
+        assert_eq!(app.state.workspaces[0].active_tab, 1);
+    }
+
+    #[test]
+    fn ctrl_page_up_wraps_to_last_workspace_and_tab() {
+        let mut app = app_with_tabbed_workspaces();
+        app.state.switch_workspace_tab(0, 0);
+
+        app.handle_terminal_key_headless(TerminalKey::new(KeyCode::PageUp, KeyModifiers::CONTROL));
+
+        assert_eq!(app.state.active, Some(1));
+        assert_eq!(app.state.workspaces[1].active_tab, 1);
+    }
+
+    #[test]
+    fn ctrl_page_down_includes_spaces_hidden_by_collapsed_worktree_group() {
+        let mut app = app_with_tabbed_workspaces();
+        app.state.workspaces[0].worktree_space = Some(crate::workspace::WorktreeSpaceMembership {
+            key: "repo-key".into(),
+            label: "repo".into(),
+            repo_root: "/repo".into(),
+            checkout_path: "/repo".into(),
+            is_linked_worktree: false,
+        });
+        app.state.workspaces[1].worktree_space = Some(crate::workspace::WorktreeSpaceMembership {
+            key: "repo-key".into(),
+            label: "repo".into(),
+            repo_root: "/repo".into(),
+            checkout_path: "/repo/issue".into(),
+            is_linked_worktree: true,
+        });
+        app.state.collapsed_space_keys.insert("repo-key".into());
+        app.state.switch_workspace_tab(0, 1);
+
+        app.handle_terminal_key_headless(TerminalKey::new(
+            KeyCode::PageDown,
+            KeyModifiers::CONTROL,
+        ));
+
+        assert_eq!(app.state.active, Some(1));
+        assert_eq!(app.state.workspaces[1].active_tab, 0);
+    }
 }

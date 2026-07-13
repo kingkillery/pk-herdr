@@ -241,14 +241,14 @@ impl App {
                 super::modal::open_rename_active_tab(&mut self.state, false)
             }
             NavigateAction::PreviousTab => {
-                if let Some(tab_idx) = self.relative_tab(-1) {
-                    self.focus_tab_idx_via_api(tab_idx);
+                if let Some((ws_idx, tab_idx)) = self.state.previous_tab_target() {
+                    self.focus_workspace_tab_idx_via_api(ws_idx, tab_idx);
                     leave_navigate_mode(&mut self.state);
                 }
             }
             NavigateAction::NextTab => {
-                if let Some(tab_idx) = self.relative_tab(1) {
-                    self.focus_tab_idx_via_api(tab_idx);
+                if let Some((ws_idx, tab_idx)) = self.state.next_tab_target() {
+                    self.focus_workspace_tab_idx_via_api(ws_idx, tab_idx);
                     leave_navigate_mode(&mut self.state);
                 }
             }
@@ -377,6 +377,10 @@ impl App {
         let Some(ws_idx) = self.state.active else {
             return;
         };
+        self.focus_workspace_tab_idx_via_api(ws_idx, tab_idx);
+    }
+
+    fn focus_workspace_tab_idx_via_api(&mut self, ws_idx: usize, tab_idx: usize) {
         let Some(tab_id) = self.public_tab_id(ws_idx, tab_idx) else {
             return;
         };
@@ -622,17 +626,6 @@ impl App {
         let current_pos = order.iter().position(|idx| *idx == current).unwrap_or(0);
         let next = (current_pos as isize + delta).rem_euclid(order.len() as isize) as usize;
         order.get(next).copied()
-    }
-
-    fn relative_tab(&self, delta: isize) -> Option<usize> {
-        let ws = self
-            .state
-            .active
-            .and_then(|ws_idx| self.state.workspaces.get(ws_idx))?;
-        if ws.tabs.is_empty() {
-            return None;
-        }
-        Some((ws.active_tab as isize + delta).rem_euclid(ws.tabs.len() as isize) as usize)
     }
 
     fn agent_entry_target(&self, idx: usize) -> Option<(usize, crate::layout::PaneId)> {
