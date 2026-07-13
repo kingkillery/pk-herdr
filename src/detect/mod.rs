@@ -120,7 +120,7 @@ pub fn parse_agent_label(agent: &str) -> Option<Agent> {
         "devin" | "devin-cli" | "devin cli" => Some(Agent::Devin),
         "agy" | "antigravity" | "antigravity-cli" => Some(Agent::Antigravity),
         "cline" => Some(Agent::Cline),
-        "omp" => Some(Agent::Omp),
+        "omp" | "ompk" => Some(Agent::Omp),
         "opencode" | "open-code" => Some(Agent::OpenCode),
         "copilot" | "github-copilot" | "ghcs" => Some(Agent::GithubCopilot),
         "kimi" | "kimi-code" | "kimi code" => Some(Agent::Kimi),
@@ -149,7 +149,7 @@ pub fn identify_agent(process_name: &str) -> Option<Agent> {
         "devin" | "devin-cli" | "devin cli" => Some(Agent::Devin),
         "agy" | "antigravity" | "antigravity-cli" => Some(Agent::Antigravity),
         "cline" => Some(Agent::Cline),
-        "omp" => Some(Agent::Omp),
+        "omp" | "ompk" => Some(Agent::Omp),
         "opencode" | "open-code" => Some(Agent::OpenCode),
         "copilot" | "github-copilot" | "ghcs" => Some(Agent::GithubCopilot),
         "kimi" | "kimi-code" | "kimi code" => Some(Agent::Kimi),
@@ -621,6 +621,8 @@ mod tests {
         assert_eq!(identify_agent("antigravity-cli"), Some(Agent::Antigravity));
         assert_eq!(identify_agent("cline"), Some(Agent::Cline));
         assert_eq!(identify_agent("omp"), Some(Agent::Omp));
+        assert_eq!(identify_agent("ompk"), Some(Agent::Omp));
+        assert_eq!(identify_agent("ompk.exe"), Some(Agent::Omp));
         assert_eq!(identify_agent("opencode"), Some(Agent::OpenCode));
         assert_eq!(identify_agent("opencode.exe"), Some(Agent::OpenCode));
         assert_eq!(identify_agent("kimi"), Some(Agent::Kimi));
@@ -646,6 +648,7 @@ mod tests {
         assert_eq!(parse_agent_label("agy"), Some(Agent::Antigravity));
         assert_eq!(parse_agent_label("antigravity"), Some(Agent::Antigravity));
         assert_eq!(parse_agent_label("omp"), Some(Agent::Omp));
+        assert_eq!(parse_agent_label("ompk"), Some(Agent::Omp));
         assert_eq!(parse_agent_label("opencode.exe"), Some(Agent::OpenCode));
         assert_eq!(parse_agent_label("copilot"), Some(Agent::GithubCopilot));
         assert_eq!(parse_agent_label("kimi-code"), Some(Agent::Kimi));

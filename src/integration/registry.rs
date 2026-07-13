@@ -35,7 +35,7 @@ pub(crate) fn integration_target_command_names(
 ) -> &'static [&'static str] {
     match target {
         crate::api::schema::IntegrationTarget::Pi => &["pi"],
-        crate::api::schema::IntegrationTarget::Omp => &["omp"],
+        crate::api::schema::IntegrationTarget::Omp => &["omp", "ompk"],
         crate::api::schema::IntegrationTarget::Claude => &["claude"],
         crate::api::schema::IntegrationTarget::Codex => &["codex"],
         crate::api::schema::IntegrationTarget::Copilot => &["copilot"],
