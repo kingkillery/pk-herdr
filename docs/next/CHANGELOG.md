@@ -10,6 +10,7 @@
 - Added `herdr terminal session observe` for read-only live ANSI terminal streams that bridge processes can consume as newline-delimited JSON.
 - Added `herdr terminal session control` for bridge processes that need live ANSI frames plus input, resize, scroll, release, and takeover authority.
 - Added `ui.hide_tab_bar_when_single_tab` to hide the tab row when a workspace has one tab. (#448)
+- Added a pane right-click **Summarize session** action for idle OMP, Claude, and Codex agents. The action asks the agent to produce a concise handoff summary from its current conversation context.
 
 ### Changed
 - Bumped the client/server protocol version to 15 for socket API placement mutation event and response compatibility.

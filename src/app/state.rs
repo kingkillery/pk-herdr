@@ -1077,6 +1077,7 @@ pub enum ContextMenuKind {
         pane_id: PaneId,
         source_pane_id: Option<PaneId>,
         has_manual_label: bool,
+        can_summarize_session: bool,
     },
 }
 
@@ -1129,6 +1130,63 @@ impl ContextMenuState {
             ContextMenuKind::Pane {
                 has_manual_label: true,
                 source_pane_id: Some(_),
+                can_summarize_session: true,
+                ..
+            } => &[
+                "Rename pane",
+                "Clear pane name",
+                crate::app::session_summary::MENU_ITEM,
+                "Swap with focused pane",
+                "Split right",
+                "Split down",
+                "Zoom",
+                "Close pane",
+            ],
+            ContextMenuKind::Pane {
+                has_manual_label: false,
+                source_pane_id: Some(_),
+                can_summarize_session: true,
+                ..
+            } => &[
+                "Rename pane",
+                crate::app::session_summary::MENU_ITEM,
+                "Swap with focused pane",
+                "Split right",
+                "Split down",
+                "Zoom",
+                "Close pane",
+            ],
+            ContextMenuKind::Pane {
+                has_manual_label: true,
+                source_pane_id: None,
+                can_summarize_session: true,
+                ..
+            } => &[
+                "Rename pane",
+                "Clear pane name",
+                crate::app::session_summary::MENU_ITEM,
+                "Split right",
+                "Split down",
+                "Zoom",
+                "Close pane",
+            ],
+            ContextMenuKind::Pane {
+                has_manual_label: false,
+                source_pane_id: None,
+                can_summarize_session: true,
+                ..
+            } => &[
+                "Rename pane",
+                crate::app::session_summary::MENU_ITEM,
+                "Split right",
+                "Split down",
+                "Zoom",
+                "Close pane",
+            ],
+            ContextMenuKind::Pane {
+                has_manual_label: true,
+                source_pane_id: Some(_),
+                can_summarize_session: false,
                 ..
             } => &[
                 "Rename pane",
@@ -1142,6 +1200,7 @@ impl ContextMenuState {
             ContextMenuKind::Pane {
                 has_manual_label: false,
                 source_pane_id: Some(_),
+                can_summarize_session: false,
                 ..
             } => &[
                 "Rename pane",
@@ -1154,6 +1213,7 @@ impl ContextMenuState {
             ContextMenuKind::Pane {
                 has_manual_label: true,
                 source_pane_id: None,
+                can_summarize_session: false,
                 ..
             } => &[
                 "Rename pane",
@@ -1166,6 +1226,7 @@ impl ContextMenuState {
             ContextMenuKind::Pane {
                 has_manual_label: false,
                 source_pane_id: None,
+                can_summarize_session: false,
                 ..
             } => &[
                 "Rename pane",

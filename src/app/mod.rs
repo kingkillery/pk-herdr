@@ -16,6 +16,7 @@ mod input;
 mod runtime;
 mod runtime_mutations;
 mod session;
+mod session_summary;
 pub mod state;
 mod terminal_targets;
 mod theme_sync;

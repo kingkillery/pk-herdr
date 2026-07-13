@@ -1429,14 +1429,15 @@ impl App {
             Ok(encoded_keys) => encoded_keys,
             Err(key) => return encode_error(id, "invalid_key", format!("unsupported key {key}")),
         };
+        let mut input = Vec::new();
         if !params.text.is_empty() {
-            let text_bytes = encode_api_text(runtime, &params.text);
-            if let Err(err) = runtime.try_send_bytes(Bytes::from(text_bytes)) {
-                return encode_error(id, "pane_send_failed", err.to_string());
-            }
+            input.extend(encode_api_text(runtime, &params.text));
         }
         for bytes in encoded_keys {
-            if let Err(err) = runtime.try_send_bytes(Bytes::from(bytes)) {
+            input.extend(bytes);
+        }
+        if !input.is_empty() {
+            if let Err(err) = runtime.try_send_bytes(Bytes::from(input)) {
                 return encode_error(id, "pane_send_failed", err.to_string());
             }
         }
@@ -1940,6 +1941,29 @@ mod tests {
         assert_eq!(success.id, "req");
         assert_eq!(success.result, ResponseResult::Ok {});
         assert_eq!(rx.try_recv().unwrap(), bytes::Bytes::from(vec![0x0a]));
+        assert!(rx.try_recv().is_err());
+    }
+
+    #[tokio::test]
+    async fn api_pane_send_input_batches_text_and_keys_atomically() {
+        let (mut app, pane_id, mut rx) = app_with_send_key_runtime(1);
+
+        let response = app.handle_api_request(crate::api::schema::Request {
+            id: "req".into(),
+            method: crate::api::schema::Method::PaneSendInput(PaneSendInputParams {
+                pane_id,
+                text: "hello".into(),
+                keys: vec!["enter".into()],
+            }),
+        });
+
+        let success: SuccessResponse = serde_json::from_str(&response).unwrap();
+        assert_eq!(success.id, "req");
+        assert_eq!(success.result, ResponseResult::Ok {});
+        assert_eq!(
+            rx.try_recv().unwrap(),
+            bytes::Bytes::from_static(b"hello\r")
+        );
         assert!(rx.try_recv().is_err());
     }
 

@@ -1078,8 +1078,13 @@ impl AppState {
                         .get(ws_idx)
                         .and_then(|ws| ws.pane_state(info.id))
                         .and_then(|pane| self.terminals.get(&pane.attached_terminal_id))
-                        .and_then(|terminal| terminal.manual_label.as_ref())
-                        .is_some();
+                        .is_some_and(|terminal| terminal.manual_label.is_some());
+                    let can_summarize_session = crate::app::session_summary::pane_is_ready(
+                        self,
+                        terminal_runtimes,
+                        ws_idx,
+                        info.id,
+                    );
                     self.context_menu = Some(ContextMenuState {
                         kind: ContextMenuKind::Pane {
                             ws_idx,
@@ -1087,6 +1092,7 @@ impl AppState {
                             pane_id: info.id,
                             source_pane_id,
                             has_manual_label,
+                            can_summarize_session,
                         },
                         x: mouse.column,
                         y: mouse.row,
@@ -1848,6 +1854,76 @@ mod tests {
         workspace::Workspace,
     };
 
+    fn pane_summary_menu_items(
+        configure_terminal: impl FnOnce(&mut crate::terminal::TerminalState),
+    ) -> Vec<&'static str> {
+        let mut app = app_for_mouse_test();
+        let mut ws = Workspace::test_new("test");
+        let pane_id = ws.tabs[0].root_pane;
+        let terminal_id = ws.terminal_id(pane_id).cloned().expect("terminal id");
+        let runtime =
+            crate::terminal::TerminalRuntime::test_with_screen_bytes(80, 24, b"\xE2\x9D\xAF ");
+        runtime.test_process_pty_bytes(b"\x1b]0;\xE2\x9C\xB3 Claude Code\x07");
+        ws.insert_test_runtime(pane_id, runtime);
+        app.state.workspaces = vec![ws];
+        app.state.ensure_test_terminals();
+        app.state.active = Some(0);
+        app.state.selected = 0;
+        app.state.mode = Mode::Terminal;
+        configure_terminal(
+            app.state
+                .terminals
+                .get_mut(&terminal_id)
+                .expect("terminal state"),
+        );
+        crate::ui::compute_view(&mut app.state, Rect::new(0, 0, 100, 20));
+        let info = app.state.view.pane_infos[0].clone();
+        app.handle_mouse(mouse(
+            MouseEventKind::Down(MouseButton::Right),
+            info.inner_rect.x,
+            info.inner_rect.y,
+        ));
+
+        app.state
+            .context_menu
+            .as_ref()
+            .expect("pane context menu")
+            .items()
+            .to_vec()
+    }
+
+    fn pane_summary_menu_visible(
+        configure_terminal: impl FnOnce(&mut crate::terminal::TerminalState),
+    ) -> bool {
+        pane_summary_menu_items(configure_terminal).contains(&"Summarize session")
+    }
+
+    fn session_summary_menu(
+        pane_id: crate::layout::PaneId,
+        source_pane_id: Option<crate::layout::PaneId>,
+        has_manual_label: bool,
+    ) -> (ContextMenuState, usize) {
+        let menu = ContextMenuState {
+            kind: ContextMenuKind::Pane {
+                ws_idx: 0,
+                tab_idx: 0,
+                pane_id,
+                source_pane_id,
+                has_manual_label,
+                can_summarize_session: true,
+            },
+            x: 2,
+            y: 2,
+            list: MenuListState::new(0),
+        };
+        let idx = menu
+            .items()
+            .iter()
+            .position(|item| *item == "Summarize session")
+            .expect("session summary item");
+        (menu, idx)
+    }
+
     #[tokio::test]
     async fn terminal_wheel_uses_configured_mouse_scroll_lines() {
         let mut app = app_for_mouse_test();
@@ -2127,6 +2203,271 @@ mod tests {
         assert!(app.state.context_menu.is_some());
         assert!(app.state.right_click_passthrough.is_none());
         assert!(input_rx.try_recv().is_err());
+    }
+
+    #[tokio::test]
+    async fn pane_right_click_offers_session_summary_for_supported_agents() {
+        for agent in [Agent::Claude, Agent::Codex] {
+            assert!(
+                pane_summary_menu_visible(|terminal| {
+                    terminal.set_detected_state(Some(agent), AgentState::Idle);
+                }),
+                "expected summary action for {agent:?}"
+            );
+        }
+        assert!(pane_summary_menu_visible(|terminal| {
+            terminal.set_hook_authority(
+                "herdr:omp".into(),
+                "omp".into(),
+                AgentState::Idle,
+                None,
+                None,
+            );
+        }));
+
+        assert!(pane_summary_menu_visible(|terminal| {
+            terminal.set_detected_state(Some(Agent::Claude), AgentState::Blocked);
+            terminal.set_hook_authority(
+                "herdr:claude".into(),
+                "claude".into(),
+                AgentState::Idle,
+                None,
+                None,
+            );
+        }));
+    }
+
+    #[tokio::test]
+    async fn labeled_pane_keeps_session_summary_action() {
+        let items = pane_summary_menu_items(|terminal| {
+            terminal.manual_label = Some("build agent".into());
+            terminal.set_hook_authority(
+                "herdr:omp".into(),
+                "omp".into(),
+                AgentState::Idle,
+                None,
+                None,
+            );
+        });
+
+        assert!(items.contains(&"Clear pane name"));
+        assert!(items.contains(&"Summarize session"));
+
+        let mut ws = Workspace::test_new("test");
+        let pane_id = ws.tabs[0].root_pane;
+        let source_pane_id = ws.test_split(Direction::Horizontal);
+        for source in [None, Some(source_pane_id)] {
+            let (menu, _) = session_summary_menu(pane_id, source, true);
+            assert!(menu.items().contains(&"Clear pane name"));
+            assert!(menu.items().contains(&"Summarize session"));
+            let unavailable_menu = ContextMenuState {
+                kind: ContextMenuKind::Pane {
+                    ws_idx: 0,
+                    tab_idx: 0,
+                    pane_id,
+                    source_pane_id: source,
+                    has_manual_label: true,
+                    can_summarize_session: false,
+                },
+                x: 2,
+                y: 2,
+                list: MenuListState::new(0),
+            };
+            assert!(unavailable_menu.items().contains(&"Clear pane name"));
+            assert!(!unavailable_menu.items().contains(&"Summarize session"));
+        }
+    }
+
+    #[tokio::test]
+    async fn pane_right_click_hides_session_summary_for_unsupported_agents_and_shells() {
+        for agent in [Agent::Pi, Agent::OpenCode] {
+            assert!(!pane_summary_menu_visible(|terminal| {
+                terminal.set_detected_state(Some(agent), AgentState::Idle);
+            }));
+        }
+        assert!(!pane_summary_menu_visible(|_| {}));
+        assert!(!pane_summary_menu_visible(|terminal| {
+            terminal.set_hook_authority(
+                "herdr:pi".into(),
+                "pi".into(),
+                AgentState::Idle,
+                None,
+                None,
+            );
+        }));
+    }
+
+    #[tokio::test]
+    async fn pane_right_click_hides_session_summary_while_agent_is_blocked() {
+        assert!(!pane_summary_menu_visible(|terminal| {
+            terminal.set_detected_state(Some(Agent::Claude), AgentState::Blocked);
+        }));
+    }
+
+    #[tokio::test]
+    async fn session_summary_menu_action_focuses_and_prompts_target_agent() {
+        let mut app = app_for_mouse_test();
+        let mut ws = Workspace::test_new("test");
+        let source_pane_id = ws.tabs[0].root_pane;
+        let target_pane_id = ws.test_split(Direction::Horizontal);
+        let target_terminal_id = ws
+            .terminal_id(target_pane_id)
+            .cloned()
+            .expect("target terminal id");
+        let (source_runtime, mut source_input_rx) =
+            crate::terminal::TerminalRuntime::test_with_channel(80, 24);
+        let (target_runtime, mut target_input_rx) =
+            crate::terminal::TerminalRuntime::test_with_channel_and_scrollback_bytes(
+                80, 24, 0, b"", 4,
+            );
+        target_runtime.test_process_pty_bytes(b"\x1b]0;\xE2\x9C\xB3 Claude Code\x07");
+        ws.insert_test_runtime(source_pane_id, source_runtime);
+        ws.insert_test_runtime(target_pane_id, target_runtime);
+        ws.tabs[0].layout.focus_pane(source_pane_id);
+        app.state.workspaces = vec![ws];
+        app.state.ensure_test_terminals();
+        app.state.active = Some(0);
+        app.state.selected = 0;
+        app.state.mode = Mode::ContextMenu;
+        app.state
+            .terminals
+            .get_mut(&target_terminal_id)
+            .expect("target terminal state")
+            .set_detected_state(Some(Agent::Claude), AgentState::Idle);
+        let (menu, idx) = session_summary_menu(target_pane_id, Some(source_pane_id), false);
+
+        app.apply_context_menu_action_via_api(menu, idx);
+
+        assert_eq!(
+            app.state.workspaces[0].focused_pane_id(),
+            Some(target_pane_id)
+        );
+        assert!(source_input_rx.try_recv().is_err());
+        let submitted = target_input_rx
+            .try_recv()
+            .expect("submitted summary prompt");
+        let prompt_bytes = submitted
+            .as_ref()
+            .strip_suffix(b"\r")
+            .expect("summary prompt followed by Enter");
+        let prompt = std::str::from_utf8(prompt_bytes).expect("UTF-8 summary prompt");
+        for required in [
+            "handoff",
+            "goal",
+            "decisions",
+            "work completed",
+            "files changed",
+            "commands",
+            "tests",
+            "unresolved",
+            "next steps",
+            "concise",
+            "self-contained",
+        ] {
+            assert!(
+                prompt.contains(required),
+                "missing summary topic: {required}"
+            );
+        }
+        assert!(!prompt.contains('\n'));
+        assert!(prompt.len() < 500);
+        assert!(target_input_rx.try_recv().is_err());
+        assert_eq!(app.state.mode, Mode::Terminal);
+    }
+
+    #[tokio::test]
+    async fn session_summary_menu_action_rechecks_current_agent() {
+        let cases: [(&str, fn(&mut crate::terminal::TerminalState)); 2] = [
+            ("blocked", |terminal| {
+                terminal.set_detected_state(Some(Agent::Claude), AgentState::Blocked);
+            }),
+            ("unsupported", |terminal| {
+                terminal.set_detected_state(Some(Agent::Pi), AgentState::Idle);
+            }),
+        ];
+
+        for (case, configure_terminal) in cases {
+            let mut app = app_for_mouse_test();
+            let mut ws = Workspace::test_new("test");
+            let pane_id = ws.tabs[0].root_pane;
+            let terminal_id = ws.terminal_id(pane_id).cloned().expect("terminal id");
+            let (runtime, mut input_rx) =
+                crate::terminal::TerminalRuntime::test_with_channel(80, 24);
+            ws.insert_test_runtime(pane_id, runtime);
+            app.state.workspaces = vec![ws];
+            app.state.ensure_test_terminals();
+            app.state.active = Some(0);
+            app.state.selected = 0;
+            app.state.mode = Mode::ContextMenu;
+            configure_terminal(
+                app.state
+                    .terminals
+                    .get_mut(&terminal_id)
+                    .expect("terminal state"),
+            );
+            let (menu, idx) = session_summary_menu(pane_id, None, false);
+
+            app.apply_context_menu_action_via_api(menu, idx);
+
+            assert!(input_rx.try_recv().is_err(), "unexpected input for {case}");
+            let toast = app.state.toast.as_ref().expect("stale-action toast");
+            assert_eq!(toast.title, "session summary failed");
+            assert_eq!(toast.context, "The agent is no longer idle at its prompt.");
+            assert!(app.toast_deadline.is_some());
+            assert_eq!(app.state.mode, Mode::Terminal);
+        }
+    }
+
+    #[tokio::test]
+    async fn session_summary_menu_action_reports_closed_pane() {
+        let mut app = app_for_mouse_test();
+        let ws = Workspace::test_new("test");
+        let pane_id = ws.tabs[0].root_pane;
+        app.state.workspaces.clear();
+        app.state.mode = Mode::ContextMenu;
+        let (menu, idx) = session_summary_menu(pane_id, None, false);
+
+        app.apply_context_menu_action_via_api(menu, idx);
+
+        let toast = app.state.toast.as_ref().expect("closed-pane toast");
+        assert_eq!(toast.title, "session summary failed");
+        assert_eq!(toast.context, "The pane is no longer available.");
+        assert!(app.toast_deadline.is_some());
+        assert_eq!(app.state.mode, Mode::Terminal);
+    }
+
+    #[tokio::test]
+    async fn session_summary_menu_action_reports_input_failure() {
+        let mut app = app_for_mouse_test();
+        let mut ws = Workspace::test_new("test");
+        let pane_id = ws.tabs[0].root_pane;
+        let terminal_id = ws.terminal_id(pane_id).cloned().expect("terminal id");
+        let (runtime, input_rx) =
+            crate::terminal::TerminalRuntime::test_with_channel_and_scrollback_bytes(
+                80, 24, 0, b"", 1,
+            );
+        drop(input_rx);
+        runtime.test_process_pty_bytes(b"\x1b]0;\xE2\x9C\xB3 Claude Code\x07");
+        ws.insert_test_runtime(pane_id, runtime);
+        app.state.workspaces = vec![ws];
+        app.state.ensure_test_terminals();
+        app.state.active = Some(0);
+        app.state.selected = 0;
+        app.state.mode = Mode::ContextMenu;
+        app.state
+            .terminals
+            .get_mut(&terminal_id)
+            .expect("terminal state")
+            .set_detected_state(Some(Agent::Claude), AgentState::Idle);
+        let (menu, idx) = session_summary_menu(pane_id, None, false);
+
+        app.apply_context_menu_action_via_api(menu, idx);
+
+        assert_eq!(
+            app.state.toast.as_ref().map(|toast| toast.title.as_str()),
+            Some("session summary failed")
+        );
+        assert!(app.toast_deadline.is_some());
     }
 
     #[tokio::test]
@@ -2724,6 +3065,7 @@ mod tests {
                 pane_id,
                 source_pane_id: None,
                 has_manual_label: false,
+                can_summarize_session: false,
             },
             x: 2,
             y: 2,

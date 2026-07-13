@@ -1,3 +1,5 @@
+#[cfg(test)]
+use bytes::Bytes;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 #[cfg(test)]
 use ratatui::layout::Direction;
@@ -784,6 +786,31 @@ pub(super) fn apply_context_menu_action(
         }
         (
             ContextMenuKind::Pane {
+                ws_idx, pane_id, ..
+            },
+            Some("Summarize session"),
+        ) => {
+            if crate::app::session_summary::pane_is_ready(state, terminal_runtimes, ws_idx, pane_id)
+            {
+                if let Some(runtime) =
+                    state.runtime_for_pane_in_workspace(terminal_runtimes, ws_idx, pane_id)
+                {
+                    let _ = runtime.try_send_bytes(Bytes::from_static(
+                        crate::app::session_summary::PROMPT.as_bytes(),
+                    ));
+                    let enter = runtime.encode_terminal_key(TerminalKey::new(
+                        KeyCode::Enter,
+                        KeyModifiers::empty(),
+                    ));
+                    if !enter.is_empty() {
+                        let _ = runtime.try_send_bytes(Bytes::from(enter));
+                    }
+                }
+            }
+            leave_modal(state);
+        }
+        (
+            ContextMenuKind::Pane {
                 ws_idx,
                 tab_idx,
                 pane_id,
@@ -1194,6 +1221,54 @@ impl App {
                             },
                         ),
                     );
+                }
+                self.state.mode = Mode::Terminal;
+            }
+            (
+                ContextMenuKind::Pane {
+                    ws_idx, pane_id, ..
+                },
+                Some("Summarize session"),
+            ) => {
+                let previous_toast = self.state.toast.clone();
+                let failure_context = match self.public_pane_id(ws_idx, pane_id) {
+                    None => Some("The pane is no longer available.".to_string()),
+                    Some(_)
+                        if !crate::app::session_summary::pane_is_ready(
+                            &self.state,
+                            &self.terminal_runtimes,
+                            ws_idx,
+                            pane_id,
+                        ) =>
+                    {
+                        Some("The agent is no longer idle at its prompt.".to_string())
+                    }
+                    Some(public_pane_id) => {
+                        self.focus_pane_internal_via_api(ws_idx, pane_id);
+                        let response = self.dispatch_runtime_mutation(
+                            "tui.pane.summarize_session",
+                            crate::api::schema::Method::PaneSendInput(
+                                crate::api::schema::PaneSendInputParams {
+                                    pane_id: public_pane_id,
+                                    text: crate::app::session_summary::PROMPT.into(),
+                                    keys: vec!["enter".into()],
+                                },
+                            ),
+                        );
+                        serde_json::from_str::<crate::api::schema::ErrorResponse>(&response)
+                            .ok()
+                            .map(|error| error.error.message)
+                    }
+                };
+                if let Some(context) = failure_context {
+                    self.state.toast = Some(crate::app::state::ToastNotification {
+                        kind: crate::app::state::ToastKind::NeedsAttention,
+                        title: "session summary failed".into(),
+                        context,
+                        position: None,
+                        target: None,
+                    });
+                    self.sync_toast_deadline(previous_toast);
                 }
                 self.state.mode = Mode::Terminal;
             }
@@ -1846,6 +1921,7 @@ mod tests {
                 pane_id,
                 source_pane_id: None,
                 has_manual_label: false,
+                can_summarize_session: false,
             },
             x: 0,
             y: 0,
