@@ -3308,7 +3308,7 @@ mod tests {
                     "body": "### Heads up\n- Defaults changed"
                 }},
                 "assets": {{
-                    "{asset_key}": "https://example.com/herdr"
+                    "{asset_key}": "https://herdr.pkking.computer/releases/download/v99.99.99/herdr"
                 }}
             }}"####
         );
@@ -3320,7 +3320,10 @@ mod tests {
             .expect("release info");
 
         assert_eq!(release.version, Version::parse("99.99.99").unwrap());
-        assert_eq!(release.download_url, "https://example.com/herdr");
+        assert_eq!(
+            release.download_url,
+            "https://herdr.pkking.computer/releases/download/v99.99.99/herdr"
+        );
     }
 
     #[test]
@@ -3354,7 +3357,7 @@ mod tests {
                 "notes": "### Fixed\n- One",
                 "assets": {{
                     "{asset_key}": {{
-                        "url": "https://example.com/herdr-linux-x86_64",
+                        "url": "https://herdr.pkking.computer/releases/download/preview/herdr-linux-x86_64",
                         "sha256": "deadbeef"
                     }}
                 }},
@@ -3366,7 +3369,7 @@ mod tests {
                         "protocol": 77,
                         "assets": {{
                             "{asset_key}": {{
-                                "url": "https://example.com/herdr-linux_x86_64",
+                                "url": "https://herdr.pkking.computer/releases/download/preview/herdr-linux_x86_64",
                                 "sha256": "deadbeef"
                             }}
                         }}
