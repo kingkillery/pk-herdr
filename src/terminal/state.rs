@@ -41,6 +41,7 @@ enum FullLifecycleHookSuppressionReason {
     ProcessExit,
 }
 
+const MAX_STALE_FULL_LIFECYCLE_HOOK_SESSIONS_PER_SOURCE: usize = 8;
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct StaleFullLifecycleHookSession {
     agent_label: String,
@@ -773,6 +774,11 @@ impl TerminalState {
             .any(|existing| existing == &stale_session)
         {
             source_stale_sessions.push(stale_session);
+        }
+        if source_stale_sessions.len() > MAX_STALE_FULL_LIFECYCLE_HOOK_SESSIONS_PER_SOURCE {
+            let excess =
+                source_stale_sessions.len() - MAX_STALE_FULL_LIFECYCLE_HOOK_SESSIONS_PER_SOURCE;
+            source_stale_sessions.drain(..excess);
         }
     }
 
@@ -3991,6 +3997,62 @@ mod tests {
         assert_eq!(
             terminal.hook_authority.as_ref().unwrap().source,
             "custom:pi"
+        );
+    }
+
+    #[test]
+    fn stale_full_lifecycle_hook_sessions_are_bounded_per_source() {
+        let mut terminal = test_terminal();
+        for index in 0..(MAX_STALE_FULL_LIFECYCLE_HOOK_SESSIONS_PER_SOURCE + 2) {
+            terminal.remember_stale_full_lifecycle_hook_session(
+                "herdr:claude".into(),
+                "claude".into(),
+                crate::agent_resume::AgentSessionRef::id(&format!("session-{index}"))
+                    .expect("valid session id"),
+            );
+        }
+
+        let stale_sessions = terminal
+            .stale_full_lifecycle_hook_sessions
+            .get("herdr:claude")
+            .expect("stale sessions for source");
+        assert_eq!(
+            stale_sessions.len(),
+            MAX_STALE_FULL_LIFECYCLE_HOOK_SESSIONS_PER_SOURCE
+        );
+        assert!(!stale_sessions.iter().any(|session| {
+            session.session_ref.value == "session-0" || session.session_ref.value == "session-1"
+        }));
+        assert!(stale_sessions
+            .iter()
+            .any(|session| session.session_ref.value == "session-2"));
+    }
+
+    #[test]
+    fn stale_full_lifecycle_hook_session_retention_is_bounded_independently_per_source() {
+        let mut terminal = test_terminal();
+        for index in 0..(MAX_STALE_FULL_LIFECYCLE_HOOK_SESSIONS_PER_SOURCE + 1) {
+            terminal.remember_stale_full_lifecycle_hook_session(
+                "herdr:claude".into(),
+                "claude".into(),
+                crate::agent_resume::AgentSessionRef::id(&format!("claude-{index}"))
+                    .expect("valid session id"),
+            );
+            terminal.remember_stale_full_lifecycle_hook_session(
+                "herdr:codex".into(),
+                "codex".into(),
+                crate::agent_resume::AgentSessionRef::id(&format!("codex-{index}"))
+                    .expect("valid session id"),
+            );
+        }
+
+        assert_eq!(
+            terminal.stale_full_lifecycle_hook_sessions["herdr:claude"].len(),
+            MAX_STALE_FULL_LIFECYCLE_HOOK_SESSIONS_PER_SOURCE
+        );
+        assert_eq!(
+            terminal.stale_full_lifecycle_hook_sessions["herdr:codex"].len(),
+            MAX_STALE_FULL_LIFECYCLE_HOOK_SESSIONS_PER_SOURCE
         );
     }
 }

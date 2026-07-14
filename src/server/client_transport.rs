@@ -42,6 +42,13 @@ const MAX_INPUT_PAYLOAD: usize = 1024 * 1024; // 1 MB
 /// Maximum structured input events accepted in one client message.
 const MAX_INPUT_EVENT_BATCH: usize = 4096;
 
+/// Maximum number of reliable control frames retained for a client.
+///
+/// Control frames are never dropped or overwritten. Producers wait for the
+/// writer to make room, which preserves ordering while preventing an
+/// unresponsive client from growing memory without bound.
+const MAX_CONTROL_BACKLOG: usize = 64;
+
 /// Channels owned by the server side of a client writer thread.
 #[derive(Clone, Debug)]
 pub(crate) struct ClientWriter {
@@ -224,12 +231,20 @@ impl ClientWriterQueue {
 
     fn send_control(&self, data: Vec<u8>) -> Result<(), SendError<Vec<u8>>> {
         let mut state = self.lock_state();
-        if !state.writer_alive {
-            return Err(SendError(data));
+        loop {
+            if !state.writer_alive {
+                return Err(SendError(data));
+            }
+            if state.control.len() < MAX_CONTROL_BACKLOG {
+                state.control.push_back(data);
+                self.ready.notify_one();
+                return Ok(());
+            }
+            state = self
+                .ready
+                .wait(state)
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
         }
-        state.control.push_back(data);
-        self.ready.notify_one();
-        Ok(())
     }
 
     fn try_send_render(&self, data: Vec<u8>) -> Result<(), TrySendError<Vec<u8>>> {
@@ -249,6 +264,7 @@ impl ClientWriterQueue {
         let mut state = self.lock_state();
         loop {
             if let Some(data) = state.control.pop_front() {
+                self.ready.notify_one();
                 return Some(ClientWriteItem::Control(data));
             }
             if let Some(data) = state.render.take() {
@@ -814,6 +830,32 @@ mod tests {
         let mut bytes = Vec::new();
         protocol::write_message(&mut bytes, message).expect("frame server message");
         bytes
+    }
+
+    #[test]
+    fn client_writer_control_backlog_is_bounded_and_reliable() {
+        let (writer, queue) = test_queue_writer();
+        let frame = frame_server_message(&ServerMessage::ReloadSoundConfig);
+        for _ in 0..MAX_CONTROL_BACKLOG {
+            writer.control.send(frame.clone()).expect("backlog fits");
+        }
+        assert_eq!(queue.lock_state().control.len(), MAX_CONTROL_BACKLOG);
+
+        let queued = frame.clone();
+        let control = writer.control.clone();
+        let handle = std::thread::spawn(move || control.send(queued));
+        std::thread::sleep(Duration::from_millis(10));
+        assert!(
+            !handle.is_finished(),
+            "control producer bypassed backlog bound"
+        );
+
+        assert_eq!(queue.recv(), Some(ClientWriteItem::Control(frame)));
+        handle
+            .join()
+            .expect("control producer joined")
+            .expect("writer alive");
+        assert_eq!(queue.lock_state().control.len(), MAX_CONTROL_BACKLOG);
     }
 
     #[test]
