@@ -25,6 +25,7 @@
 - Remote attach now discovers compatible Homebrew, mise, and Nix profile installs before offering to install a sidecar binary to `~/.local/bin/herdr`. (#840)
 - `herdr --remote` sessions now keep the remote server in its own login-independent session and preserve compatible running servers after helper binary updates, so network drops should disconnect only the client instead of killing remote panes.
 - `herdr --remote` now reuses one OpenSSH connection across setup probes, installs, server checks, and the final bridge when `[remote].manage_ssh_config` is enabled, so password-based hosts prompt once instead of once per setup command. (#888)
+- The Herdr server now bounds per-client reliable control backlogs and stale lifecycle-hook session bookkeeping, so unresponsive clients or repeated agent session restarts no longer grow server memory without limit.
 
 ## [0.7.1] - 2026-06-24
 

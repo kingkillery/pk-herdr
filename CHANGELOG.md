@@ -2,9 +2,30 @@
 
 ## Unreleased
 
+### Added
+- Added `ui.sidebar_collapsed_mode = "hidden"` to make a collapsed sidebar use zero width while keeping the existing compact rail as the default. (#842)
+- Added `herdr completion <shell>` / `herdr completions <shell>` to generate shell completion scripts for bash, elvish, fish, PowerShell, and zsh. (#435)
+- Added `session.snapshot` to bootstrap client runtime state in one socket API response before subscribing to events.
+- Added `herdr api schema` to inspect the bundled socket API schema, with `--json` for the full JSON Schema document and `--output PATH` for file output.
+- Added `herdr terminal session observe` for read-only live ANSI terminal streams that bridge processes can consume as newline-delimited JSON.
+- Added `herdr terminal session control` for bridge processes that need live ANSI frames plus input, resize, scroll, release, and takeover authority.
+- Added `ui.hide_tab_bar_when_single_tab` to hide the tab row when a workspace has one tab. (#448)
+- Added a pane right-click **Summarize session** action for idle OMP, Claude, and Codex agents. The action asks the agent to produce a concise handoff summary from its current conversation context.
+
+### Changed
+- Migrated fork binary publishing to GitHub Releases and static hosting to GitHub Pages while preserving the `herdr.pkking.computer` installer, manifest, and compatibility download URLs.
+- Bumped the client/server protocol version to 15 for socket API placement mutation event and response compatibility.
+- `ctrl+pagedown` and `ctrl+pageup` now cycle through every tab across spaces, wrapping from the final tab back to the first space (and vice versa).
+
 ### Fixed
-- Ctrl+J now reaches pane apps as a raw line feed (`0x0a`) under the basic Kitty keyboard flags instead of the CSI u sequence `\e[106;5u`. Many terminals deliver Shift+Enter as a bare LF (Ghostty's `shift+enter=text:\n`, Warp on Windows, Alacritty `Shift+Return` bindings), which arrives parsed as Ctrl+J; re-encoding it as CSI u silently broke Shift+Enter (and the universal Ctrl+J newline) inside panes running pi, OMP, Claude Code, and Codex. This matches bare Ghostty, which sends `\n` for Ctrl+J under the basic flags. Apps that opt into `REPORT_ALL_KEYS_AS_ESCAPE_CODES` (Kitty flag 8) still receive the CSI u form. (#81, #106)
-- Windows clients now push the IME-safe Kitty keyboard subset (`CSI > 1 u`) to the outer terminal in addition to win32-input-mode. Terminals such as Warp that speak the Kitty keyboard protocol but ignore win32-input-mode previously collapsed Shift+Enter to a bare carriage return before it reached herdr, so panes never saw the modifier; herdr now receives `\x1b[13;2u` and relays it to the focused pane. No-op on terminals without Kitty support, which keep using win32-input-mode. (#429)
+- `herdr pane split --current` now resolves to the calling Herdr pane instead of the UI-focused pane when run inside a pane. (#902)
+- The `ompk` fork binary is now identified as the OMP agent, and OMP panes now get screen-based working/idle detection when the OMP integration is not reporting, such as on native Windows where the integration is unsupported.
+- Native Windows clients running inside Alacritty now preserve mouse reports and `ctrl+j` input instead of leaking mouse escape sequences into panes. `shift+enter` remains dependent on whether the outer terminal reports it as a distinct modified Enter key. (#792)
+- OMP integration state now recovers after resumed sessions such as `omp -c` and reports Ask/tool approval waits as blocked instead of leaving the pane working or stuck on the previous OMP session. (#879)
+- Remote attach now discovers compatible Homebrew, mise, and Nix profile installs before offering to install a sidecar binary to `~/.local/bin/herdr`. (#840)
+- `herdr --remote` sessions now keep the remote server in its own login-independent session and preserve compatible running servers after helper binary updates, so network drops should disconnect only the client instead of killing remote panes.
+- `herdr --remote` now reuses one OpenSSH connection across setup probes, installs, server checks, and the final bridge when `[remote].manage_ssh_config` is enabled, so password-based hosts prompt once instead of once per setup command. (#888)
+- The Herdr server now bounds per-client reliable control backlogs and stale lifecycle-hook session bookkeeping, so unresponsive clients or repeated agent session restarts no longer grow server memory without limit.
 
 ## [0.7.1] - 2026-06-24
 
