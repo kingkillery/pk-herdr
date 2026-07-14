@@ -128,10 +128,10 @@ jobs:
             os: ubuntu-latest
             name: herdr-linux-aarch64
           - target: x86_64-apple-darwin
-            os: macos-latest
+            os: macos-15 # zig 0.15.2 cannot build its build runner on the macos-26 (macos-latest) image; unpin when zig supports it
             name: herdr-macos-x86_64
           - target: aarch64-apple-darwin
-            os: macos-latest
+            os: macos-15 # zig 0.15.2 cannot build its build runner on the macos-26 (macos-latest) image; unpin when zig supports it
             name: herdr-macos-aarch64
           - target: x86_64-pc-windows-msvc
             os: windows-latest

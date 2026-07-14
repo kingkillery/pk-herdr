@@ -44,7 +44,7 @@ jobs:
           - os: ubuntu-latest
             kind: unix
             nextest_filter: all()
-          - os: macos-latest
+          - os: macos-15 # zig 0.15.2 cannot build its build runner on the macos-26 (macos-latest) image; unpin when zig supports it
             kind: unix
             nextest_filter: not binary(live_handoff)
           - os: windows-latest
