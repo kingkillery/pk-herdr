@@ -14,6 +14,7 @@ Herdr is mouse-native. You can click panes, tabs, workspaces, and agents, drag s
 A terminal multiplexer sits between your terminal and the programs running inside it. Those programs already use most key combinations: `ctrl+c` interrupts, `ctrl+r` searches history, editors claim nearly everything else. If Herdr grabbed common keys directly, it would break the programs inside it.
 
 The prefix solves this. Press the prefix key, default `ctrl+b`, and the next keypress goes to Herdr instead of your terminal. `prefix+c` means: press `ctrl+b`, release, then press `c`. One reserved key instead of dozens.
+If you have never used a terminal multiplexer, think of prefix mode as a short handoff: `ctrl+b` temporarily gives Herdr the next key, then control returns to the pane. You do not hold both keys together, and ordinary typing still goes to your shell or agent.
 
 Press `prefix+?` at any time to see every active binding.
 

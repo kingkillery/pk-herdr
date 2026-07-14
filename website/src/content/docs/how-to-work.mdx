@@ -78,6 +78,7 @@ herdr --remote ssh://you@server:2222
 ```
 
 Your local Herdr acts as a thin client. It connects over SSH, starts or attaches to the remote Herdr server, and streams the UI back to your local terminal.
+When `[remote].manage_ssh_config` is enabled, Herdr reuses one OpenSSH connection for setup probes, installs, server checks, and the final bridge. Password-based hosts therefore prompt once instead of once per setup command.
 
 Use this path when you want the remote session to feel local. The client runs on your machine, so local desktop features such as image clipboard paste can be bridged to the remote server. If you SSH first and run `herdr` on the server, Herdr runs entirely on that server and cannot read your local desktop clipboard.
 

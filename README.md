@@ -59,6 +59,8 @@ powershell -ExecutionPolicy Bypass -c "irm https://herdr.pkking.computer/install
 
 also available on the fork via `mise use -g github:kingkillery/pk-herdr`, or download binaries directly from the fork's Cloudflare distribution endpoint (per-asset URLs are listed in [the latest release manifest](https://herdr.pkking.computer/latest.json) and the [preview manifest](https://herdr.pkking.computer/preview.json); the same URLs feed the install script and `herdr update`). Homebrew and the mise registry currently track upstream Herdr, not this fork.
 
+The current stable release is **v0.7.1**. Windows remains preview-only; the current downloadable preview is **2026-07-13-64e30d357586**. Use the manifests above for platform-specific URLs and checksums rather than hard-coding an asset URL.
+
 `herdr update` upgrades an installer-managed install; mise, Homebrew, and Nix update through their own package managers. channel, preview, restart, and restore details are in the [install docs](https://herdr.pkking.computer/docs/install/).
 
 ### remote install

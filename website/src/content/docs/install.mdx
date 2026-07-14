@@ -64,7 +64,7 @@ nix flake update herdr
 
 ## Download manually
 
-The fork's release binaries are hosted at the fork's Cloudflare distribution endpoint, not on GitHub releases. Each binary is published at `https://herdr.pkking.computer/releases/download/<tag>/<asset>` and is also listed in the channel manifest at `https://herdr.pkking.computer/latest.json` (stable) and `https://herdr.pkking.computer/preview.json` (preview). Download the asset that matches your system, mark it executable, and put it on your `PATH`.
+The fork's release binaries are published on GitHub Releases and served through the compatibility download endpoint at `https://herdr.pkking.computer/releases/download/<tag>/<asset>`. The installer fetches channel manifests from `https://herdr.pkking.computer/latest.json` (stable) or `https://herdr.pkking.computer/preview.json` (preview). Download the asset that matches your system, mark it executable, and put it on your `PATH`.
 
 ### Stable binaries
 
@@ -86,17 +86,17 @@ mv herdr-linux-x86_64 ~/.local/bin/herdr
 
 ### Windows beta downloads
 
-Windows binaries are published only on preview releases while native Windows support is in beta. Use the preview installer above for normal testing, or download the Windows asset directly from the preview distribution endpoint. Current preview build: **2026-06-30-3459798b606d**.
+Windows binaries are published only on GitHub preview releases while native Windows support is in beta. Use the preview installer above for normal testing, or download the Windows asset from the compatibility endpoint. Current preview build: **2026-07-13-64e30d357586**.
 
 | System | Asset | Direct download |
 | --- | --- | --- |
-| Windows x86_64 beta | `herdr-windows-x86_64.exe` | [download](https://herdr.pkking.computer/releases/download/preview-2026-06-30-3459798b606d/herdr-windows-x86_64.exe) |
+| Windows x86_64 beta | `herdr-windows-x86_64.exe` | [download](https://herdr.pkking.computer/releases/download/preview-2026-07-13-64e30d357586/herdr-windows-x86_64.exe) |
 
 All preview builds are listed in the manifest at `https://herdr.pkking.computer/preview.json`.
 
 ## Remote install
 
-The installer and update channel are hosted at the fork's Cloudflare distribution endpoint (`https://herdr.pkking.computer`). You can push the same installer to any Linux or macOS host over SSH and attach from your local machine. `herdr --remote` does not support Windows hosts yet — from Windows, SSH into the server and run `herdr` there directly.
+The installer scripts, channel manifests, and compatibility download endpoint are hosted at the custom domain (`https://herdr.pkking.computer`), with binaries backed by the fork's GitHub Releases. You can push the same installer to any Linux or macOS host over SSH and attach from your local machine. `herdr --remote` does not support Windows hosts yet — from Windows, SSH into the server and run `herdr` there directly.
 
 To use `herdr --remote`, the local client must also be the pk-herdr fork. Otherwise the remote bootstrap will pull binaries from the upstream channel. Install the local fork client first:
 
@@ -122,7 +122,7 @@ herdr --remote user@host
 herdr --remote workbox
 ```
 
-`herdr --remote` reuses an existing remote `herdr` on `$PATH` when its protocol version matches. If the host has no matching binary, interactive runs prompt to install one to `~/.local/bin/herdr` from the fork's latest manifest; non-interactive runs fail instead of mutating the host. The download is validated against the manifest asset URL prefix and refused if the binary is not hosted at the fork's Cloudflare distribution endpoint. For named remote sessions, custom remote binaries, direct terminal attach, and live handoff, see [Persistence and remote access](/docs/persistence-remote/).
+`herdr --remote` reuses an existing remote `herdr` on `$PATH` when its protocol version matches. If the host has no matching binary, interactive runs prompt to install one to `~/.local/bin/herdr` from the fork's latest manifest; non-interactive runs fail instead of mutating the host. The download is validated against the manifest asset URL prefix and refused if the binary is not served through the fork's compatibility download endpoint. For named remote sessions, custom remote binaries, direct terminal attach, and live handoff, see [Persistence and remote access](/docs/persistence-remote/).
 
 Updates on the remote host use the same channel:
 
