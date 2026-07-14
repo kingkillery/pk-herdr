@@ -1,0 +1,12 @@
+# Patch files must stay byte-exact so `git apply --check` verification works
+# on checkouts where autocrlf would otherwise rewrite them (Windows defaults).
+*.patch -text
+
+# Vendored upstream sources are LF upstream; keep working trees LF on every
+# platform so local vendor patches verify and reverse-apply byte-exactly.
+# vendor/libghostty-vt ships its own .gitattributes with equivalent rules.
+vendor/portable-pty/** text=auto eol=lf
+
+# Generated API schema artifacts are byte-compared by tests and embedded via
+# include_str!, so keep them LF on every platform.
+docs/next/api/** text eol=lf
