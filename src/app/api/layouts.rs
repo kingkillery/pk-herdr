@@ -711,6 +711,7 @@ mod tests {
         assert_eq!(error.error.code, "split_not_found");
     }
 
+    #[cfg(unix)]
     #[tokio::test]
     async fn layout_apply_replaces_tab_with_requested_tree() {
         let mut app = app_with_workspace();

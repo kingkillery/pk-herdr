@@ -9,7 +9,9 @@ mod types;
 mod version;
 
 pub(crate) use actions::{install_target, uninstall_target};
-#[cfg(test)]
+// integration::tests imports this lock directly from env; the re-export only
+// serves unix-gated tests elsewhere in the crate, so gate it to match.
+#[cfg(all(test, unix))]
 pub(crate) use env::integration_env_lock;
 pub(crate) use env::{
     apply_pane_base_env, HERDR_PANE_ID_ENV_VAR, HERDR_TAB_ID_ENV_VAR, HERDR_WORKSPACE_ID_ENV_VAR,

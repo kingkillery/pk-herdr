@@ -227,8 +227,9 @@ impl Workspace {
     }
 
     // Test modules construct workspaces through the default constructor; production paths
-    // use the env-aware variant so pane identity env is always explicit.
-    #[cfg_attr(not(test), allow(dead_code))]
+    // use the env-aware variant so pane identity env is always explicit. The constructing
+    // tests spawn real PTYs and are unix-gated, so windows test builds see no callers.
+    #[cfg_attr(any(not(test), windows), allow(dead_code))]
     pub fn new(
         initial_cwd: PathBuf,
         rows: u16,

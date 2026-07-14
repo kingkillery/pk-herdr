@@ -3211,6 +3211,7 @@ mod tests {
         )));
     }
 
+    #[cfg(unix)]
     #[tokio::test]
     async fn navigator_rows_match_live_root_runtime_cwd_workspace_label() {
         let unique = format!(

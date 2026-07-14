@@ -4007,7 +4007,7 @@ mod tests {
             terminal.remember_stale_full_lifecycle_hook_session(
                 "herdr:claude".into(),
                 "claude".into(),
-                crate::agent_resume::AgentSessionRef::id(&format!("session-{index}"))
+                crate::agent_resume::AgentSessionRef::id(format!("session-{index}"))
                     .expect("valid session id"),
             );
         }
@@ -4035,13 +4035,13 @@ mod tests {
             terminal.remember_stale_full_lifecycle_hook_session(
                 "herdr:claude".into(),
                 "claude".into(),
-                crate::agent_resume::AgentSessionRef::id(&format!("claude-{index}"))
+                crate::agent_resume::AgentSessionRef::id(format!("claude-{index}"))
                     .expect("valid session id"),
             );
             terminal.remember_stale_full_lifecycle_hook_session(
                 "herdr:codex".into(),
                 "codex".into(),
-                crate::agent_resume::AgentSessionRef::id(&format!("codex-{index}"))
+                crate::agent_resume::AgentSessionRef::id(format!("codex-{index}"))
                     .expect("valid session id"),
             );
         }
