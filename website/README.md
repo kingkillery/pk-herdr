@@ -8,4 +8,4 @@ bun run dev
 bun run build
 ```
 
-The build output is `dist/`. Configure Cloudflare Pages to use `website` as the project root and publish `dist`.
+The build output is `dist/`. `.github/workflows/pages.yml` publishes it to GitHub Pages on pushes to `master` and manual dispatches.

@@ -49,6 +49,10 @@ function walk(node, visitor) {
 
 export default defineConfig({
   site: 'https://herdr.pkking.computer',
+  redirects: {
+    '/docs/skill': '/docs/agent-skill/',
+    '/docs/api': '/docs/socket-api/',
+  },
   integrations: [
     starlight({
       title: 'herdr',

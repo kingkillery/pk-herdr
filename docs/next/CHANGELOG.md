@@ -13,6 +13,7 @@
 - Added a pane right-click **Summarize session** action for idle OMP, Claude, and Codex agents. The action asks the agent to produce a concise handoff summary from its current conversation context.
 
 ### Changed
+- Migrated fork binary publishing to GitHub Releases and static hosting to GitHub Pages while preserving the `herdr.pkking.computer` installer, manifest, and compatibility download URLs.
 - Bumped the client/server protocol version to 15 for socket API placement mutation event and response compatibility.
 - `ctrl+pagedown` and `ctrl+pageup` now cycle through every tab across spaces, wrapping from the final tab back to the first space (and vice versa).
 

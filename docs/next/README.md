@@ -37,11 +37,11 @@ Homebrew and the mise registry currently track upstream Herdr, not this fork. Us
 mise use -g github:kingkillery/pk-herdr
 ```
 
-or download binaries directly from the fork's Cloudflare distribution endpoint (per-asset URLs are listed in [the latest release manifest](https://herdr.pkking.computer/latest.json) and the [preview manifest](https://herdr.pkking.computer/preview.json); the same URLs feed the install script and `herdr update`). Native Windows binaries are preview-only beta builds.
+or download binaries from the fork's GitHub Releases through the compatibility download endpoint (per-asset URLs are listed in [the latest release manifest](https://herdr.pkking.computer/latest.json) and the [preview manifest](https://herdr.pkking.computer/preview.json); the same URLs feed the install script and `herdr update`). Native Windows binaries are preview-only beta builds.
 
 ### remote install
 
-The installer and update channel are hosted at the fork's Cloudflare distribution endpoint (`https://herdr.pkking.computer`). To use `herdr --remote`, the local client must also be the pk-herdr fork — otherwise the remote bootstrap will pull binaries from the upstream channel. Install the local fork client first:
+The installer, update manifests, and compatibility download endpoint are hosted at `https://herdr.pkking.computer`, with binaries backed by the fork's GitHub Releases. To use `herdr --remote`, the local client must also be the pk-herdr fork — otherwise the remote bootstrap will pull binaries from the upstream channel. Install the local fork client first:
 
 ```bash
 curl -fsSL https://herdr.pkking.computer/install.sh | sh
@@ -63,7 +63,7 @@ herdr --remote user@host
 herdr --remote workbox
 ```
 
-`herdr --remote` reuses an existing remote `herdr` on `$PATH` when its protocol version matches. If the host has no matching binary, interactive runs prompt to install one to `~/.local/bin/herdr` from the fork's latest manifest; non-interactive runs fail instead of mutating the host. The download is validated against the manifest asset URL prefix and refused if the binary is not hosted at the fork's Cloudflare distribution endpoint.
+`herdr --remote` reuses an existing remote `herdr` on `$PATH` when its protocol version matches. If the host has no matching binary, interactive runs prompt to install one to `~/.local/bin/herdr` from the fork's latest manifest; non-interactive runs fail instead of mutating the host. The download is validated against the fork compatibility endpoint and refused if the asset URL is outside that prefix.
 
 Updates on the remote host use the same channel:
 

@@ -30,8 +30,6 @@ async function preparePublicAssets() {
     'latest.json',
     'preview.json',
     'robots.txt',
-    '_headers',
-    '_redirects',
   ]) {
     const source = resolve(repoRoot, 'website', file);
     try {
@@ -40,6 +38,8 @@ async function preparePublicAssets() {
       if (file !== 'preview.json' || error.code !== 'ENOENT') throw error;
     }
   }
+
+  await cp(resolve(repoRoot, 'website', 'install.sh'), resolve(publicDir, 'install'));
 
   for (const directory of ['assets', 'css', 'agent-detection']) {
     await cp(resolve(repoRoot, 'website', directory), resolve(publicDir, directory), {
