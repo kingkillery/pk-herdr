@@ -2,34 +2,63 @@
   "schema_version": 1,
   "channel": "preview",
   "base_version": "0.7.1",
-  "build_id": "2026-07-13-93328a0e63f0",
-  "commit": "93328a0e63f00de20f30549141a8c52e175bf54f",
-  "built_at": "2026-07-14T00:09:37Z",
+  "build_id": "2026-07-13-64e30d357586",
+  "commit": "64e30d3575869a2856a6b68cd7c31820624c0e3f",
+  "built_at": "2026-07-14T03:55:21Z",
   "protocol": 15,
-  "notes": "Preview build 2026-07-13-93328a0e63f0\n\nBuilt from `93328a0e63f0` on `master`.\nBase stable: v0.7.1\nCompare: https://github.com/kingkillery/pk-herdr/compare/3459798b606d019d4ac404d407af956d7539ef54...93328a0e63f00de20f30549141a8c52e175bf54f\n\n### Added\n- Add omp screen detection manifest\n- Add pane session summary action\n- Add pi-speak agent hub panes\n- Add pi-speak herdr plugin\n\n### Fixed\n- Use fork release urls in update release info tests\n- Keep surviving action defaults in local keybindings profile\n- Update displaced prefix binding test for ctrl+pagedown default\n- Resolve clippy failures on rust 1.97\n- Recognize ompk binary as omp agent\n- Cycle tabs across spaces with ctrl page keys\n- Serve release assets from cloudflare\n- Route updates through pk-herdr\n- Preserve windows input and add launch aliases\n- Deliver shift+enter newline to pane agents\n\n### Maintenance\n- Pin macos build runners to macos-15\n- Point readme manual downloads at cloudflare manifests\n- Route manual downloads through cloudflare distribution\n- Document fork remote install path\n- Pin wrangler version in cloudflare steps\n- Gate release asset upload on the github release\n- Upload release assets and deploy website to cloudflare\n\n### Other\n- Merge branch 'ogulcancelik:master' into master",
+  "notes": "Preview build 2026-07-13-64e30d357586\n\nBuilt from `64e30d357586` on `master`.\nBase stable: v0.7.1\nCompare: https://github.com/kingkillery/pk-herdr/compare/93328a0e63f00de20f30549141a8c52e175bf54f...64e30d3575869a2856a6b68cd7c31820624c0e3f\n\n### Changed\n- Rebuilt preview from the current master branch.",
   "assets": {
     "linux-x86_64": {
-      "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-13-93328a0e63f0/herdr-linux-x86_64",
-      "sha256": "c78be68d42806a5b6dbcc362a35d45ffe3b3385e4e510a078eddb2a05dee1fa1"
+      "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-13-64e30d357586/herdr-linux-x86_64",
+      "sha256": "4f834e56662971d04b5ef5ea947a0eb7bb3f506b27d202143560e6be4fa39bbd"
     },
     "linux-aarch64": {
-      "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-13-93328a0e63f0/herdr-linux-aarch64",
-      "sha256": "2b44bcee93b35e5b0c3f0628e9256760fa4397c7d422c16244dad7ed85ce6139"
+      "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-13-64e30d357586/herdr-linux-aarch64",
+      "sha256": "38f37d5ca17dea5ce1b08443e6ce2a0ec7d5123f6e66dabb16f69781f77458b7"
     },
     "macos-x86_64": {
-      "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-13-93328a0e63f0/herdr-macos-x86_64",
-      "sha256": "1aee886772eab8340563406a55e1bf03fb4979f92905fb6ecef8960d2bbfcf91"
+      "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-13-64e30d357586/herdr-macos-x86_64",
+      "sha256": "ee890ac87fc3ccd17d7072aab9d689ab87b5375935104eae7403cb22fee1a671"
     },
     "macos-aarch64": {
-      "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-13-93328a0e63f0/herdr-macos-aarch64",
-      "sha256": "52ad50bd891c52a4bedf2f22938e10efdf16544722bb1d373d82023ad67385ab"
+      "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-13-64e30d357586/herdr-macos-aarch64",
+      "sha256": "4fd394071581067fb27ab57e93467b482c3f4a269eda15ea957adfb61f29a1ac"
     },
     "windows-x86_64": {
-      "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-13-93328a0e63f0/herdr-windows-x86_64.exe",
-      "sha256": "f6fa0f0da31dee9716b9ed27a864aba573f6abb427fe2b319b8c253e98dbe957"
+      "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-13-64e30d357586/herdr-windows-x86_64.exe",
+      "sha256": "a365608f05351fa66e65e9b81d2bdcdf079238019c33762b38d1821f4accacf5"
     }
   },
   "builds": {
+    "2026-07-13-64e30d357586": {
+      "base_version": "0.7.1",
+      "commit": "64e30d3575869a2856a6b68cd7c31820624c0e3f",
+      "built_at": "2026-07-14T03:55:21Z",
+      "protocol": 15,
+      "tag": "preview-2026-07-13-64e30d357586",
+      "assets": {
+        "linux-x86_64": {
+          "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-13-64e30d357586/herdr-linux-x86_64",
+          "sha256": "4f834e56662971d04b5ef5ea947a0eb7bb3f506b27d202143560e6be4fa39bbd"
+        },
+        "linux-aarch64": {
+          "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-13-64e30d357586/herdr-linux-aarch64",
+          "sha256": "38f37d5ca17dea5ce1b08443e6ce2a0ec7d5123f6e66dabb16f69781f77458b7"
+        },
+        "macos-x86_64": {
+          "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-13-64e30d357586/herdr-macos-x86_64",
+          "sha256": "ee890ac87fc3ccd17d7072aab9d689ab87b5375935104eae7403cb22fee1a671"
+        },
+        "macos-aarch64": {
+          "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-13-64e30d357586/herdr-macos-aarch64",
+          "sha256": "4fd394071581067fb27ab57e93467b482c3f4a269eda15ea957adfb61f29a1ac"
+        },
+        "windows-x86_64": {
+          "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-13-64e30d357586/herdr-windows-x86_64.exe",
+          "sha256": "a365608f05351fa66e65e9b81d2bdcdf079238019c33762b38d1821f4accacf5"
+        }
+      }
+    },
     "2026-07-13-93328a0e63f0": {
       "base_version": "0.7.1",
       "commit": "93328a0e63f00de20f30549141a8c52e175bf54f",
