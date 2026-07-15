@@ -75,6 +75,7 @@ jobs:
       - name: Prepare release commit
         run: |
           set -euo pipefail
+          git status --porcelain
           git config user.name "kangal-bot"
           git config user.email "285672167+kangal-bot@users.noreply.github.com"
           just release-prepare "${{ inputs.version }}"
