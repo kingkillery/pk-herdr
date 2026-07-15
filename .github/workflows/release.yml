@@ -369,3 +369,11 @@ jobs:
           git add website/latest.json docs/next/product-announcement.json
           git diff --cached --quiet || git commit -m "docs: update website manifest for v$VERSION"
           git push origin master
+
+      # The manifest push above uses the deploy key, which does not create a
+      # new Pages workflow run, so dispatch the deploy explicitly to publish
+      # the updated latest.json.
+      - name: Deploy website with updated manifest
+        env:
+          GH_TOKEN: ${{ secrets.KANGAL_GITHUB_TOKEN }}
+        run: gh workflow run pages.yml --repo "$GITHUB_REPOSITORY" --ref master
