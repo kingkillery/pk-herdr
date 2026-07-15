@@ -2,7 +2,7 @@
 # managed by herdr; reinstalling or updating the integration overwrites this file.
 # add custom hooks beside this file instead of editing it.
 # HERDR_INTEGRATION_ID=kimi
-# HERDR_INTEGRATION_VERSION=4
+# HERDR_INTEGRATION_VERSION=5
 
 param([string]$Action = "")
 
@@ -17,7 +17,8 @@ try {
     $payload = $null
 }
 
-$seq = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+# Nanosecond scale, matching the sh hook's time_ns seq units.
+$seq = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() * 1000000
 $sessionId = if ($null -ne $payload -and -not [string]::IsNullOrWhiteSpace($payload.session_id)) { $payload.session_id } else { $null }
 
 try {

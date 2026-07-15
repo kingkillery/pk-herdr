@@ -3,7 +3,7 @@
 # managed by herdr; reinstalling or updating the integration overwrites this file.
 # add custom hooks beside this file instead of editing it.
 # HERDR_INTEGRATION_ID=qodercli
-# HERDR_INTEGRATION_VERSION=2
+# HERDR_INTEGRATION_VERSION=3
 #
 # Reports qodercli session identity to herdr. Registered as a Command hook
 # in ~/.qoder/settings.json by `herdr integration install qodercli` and

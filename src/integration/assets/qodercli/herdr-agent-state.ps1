@@ -2,7 +2,7 @@
 # managed by herdr; reinstalling or updating the integration overwrites this file.
 # add custom hooks beside this file instead of editing it.
 # HERDR_INTEGRATION_ID=qodercli
-# HERDR_INTEGRATION_VERSION=2
+# HERDR_INTEGRATION_VERSION=3
 
 param([string]$Action = "")
 
@@ -19,7 +19,8 @@ try {
 
 if ($null -eq $payload -or [string]::IsNullOrWhiteSpace($payload.session_id)) { exit 0 }
 
-$seq = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+# Nanosecond scale, matching the sh hook's time_ns seq units.
+$seq = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() * 1000000
 try {
     & herdr pane report-agent-session $env:HERDR_PANE_ID --source herdr:qodercli --agent qodercli --agent-session-id $payload.session_id --seq $seq 2>$null | Out-Null
 } catch {

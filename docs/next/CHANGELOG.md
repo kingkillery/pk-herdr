@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Fixed
+- Windows integration hook scripts now report nanosecond-scale sequence numbers matching the Unix hook scripts, so per-source report ordering stays consistent across platforms. Reinstalling the Claude, Codex, GitHub Copilot CLI, Droid, Kimi Code CLI, and Qoder CLI integrations picks up the fix.
+
 ## [0.8.0] - 2026-07-15
 
 ### Added
