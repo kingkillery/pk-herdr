@@ -1,35 +1,64 @@
 {
   "schema_version": 1,
   "channel": "preview",
-  "base_version": "0.7.1",
-  "build_id": "2026-07-13-64e30d357586",
-  "commit": "64e30d3575869a2856a6b68cd7c31820624c0e3f",
-  "built_at": "2026-07-14T03:55:21Z",
+  "base_version": "0.8.1",
+  "build_id": "2026-07-15-95259ea3bbe6",
+  "commit": "95259ea3bbe626009d6f81ac033dac99eecaf762",
+  "built_at": "2026-07-15T09:23:29Z",
   "protocol": 15,
-  "notes": "Preview build 2026-07-13-64e30d357586\n\nBuilt from `64e30d357586` on `master`.\nBase stable: v0.7.1\nCompare: https://github.com/kingkillery/pk-herdr/compare/93328a0e63f00de20f30549141a8c52e175bf54f...64e30d3575869a2856a6b68cd7c31820624c0e3f\n\n### Changed\n- Rebuilt preview from the current master branch.",
+  "notes": "Preview build 2026-07-15-95259ea3bbe6\n\nBuilt from `95259ea3bbe6` on `master`.\nBase stable: v0.8.1\nCompare: https://github.com/kingkillery/pk-herdr/compare/v0.8.1...95259ea3bbe626009d6f81ac033dac99eecaf762\n\n### Changed\n- Rebuilt preview from the current master branch.",
   "assets": {
     "linux-x86_64": {
-      "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-13-64e30d357586/herdr-linux-x86_64",
-      "sha256": "4f834e56662971d04b5ef5ea947a0eb7bb3f506b27d202143560e6be4fa39bbd"
+      "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-15-95259ea3bbe6/herdr-linux-x86_64",
+      "sha256": "9cadb4b5018517967afc8514327f2ec385652dd77af85e827389d2efef0e5563"
     },
     "linux-aarch64": {
-      "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-13-64e30d357586/herdr-linux-aarch64",
-      "sha256": "38f37d5ca17dea5ce1b08443e6ce2a0ec7d5123f6e66dabb16f69781f77458b7"
+      "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-15-95259ea3bbe6/herdr-linux-aarch64",
+      "sha256": "fa3f151fb70aee3b1b6aeb67dc7d9d617b3e8e1f1fb193986be29bb644c30f73"
     },
     "macos-x86_64": {
-      "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-13-64e30d357586/herdr-macos-x86_64",
-      "sha256": "ee890ac87fc3ccd17d7072aab9d689ab87b5375935104eae7403cb22fee1a671"
+      "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-15-95259ea3bbe6/herdr-macos-x86_64",
+      "sha256": "10b2bcf98e03040fd83c74d5e83b4b7d62f4533a3429465d313583db3b3d8923"
     },
     "macos-aarch64": {
-      "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-13-64e30d357586/herdr-macos-aarch64",
-      "sha256": "4fd394071581067fb27ab57e93467b482c3f4a269eda15ea957adfb61f29a1ac"
+      "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-15-95259ea3bbe6/herdr-macos-aarch64",
+      "sha256": "debbf74561d4ce0ad11e01e5d27a21fe59b3f1116f057210eb648d1368fe1c9d"
     },
     "windows-x86_64": {
-      "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-13-64e30d357586/herdr-windows-x86_64.exe",
-      "sha256": "a365608f05351fa66e65e9b81d2bdcdf079238019c33762b38d1821f4accacf5"
+      "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-15-95259ea3bbe6/herdr-windows-x86_64.exe",
+      "sha256": "8166440cc464512de66dfd5c4a1ecd1a3f41b0e471df2678b4d563f80043cdac"
     }
   },
   "builds": {
+    "2026-07-15-95259ea3bbe6": {
+      "base_version": "0.8.1",
+      "commit": "95259ea3bbe626009d6f81ac033dac99eecaf762",
+      "built_at": "2026-07-15T09:23:29Z",
+      "protocol": 15,
+      "tag": "preview-2026-07-15-95259ea3bbe6",
+      "assets": {
+        "linux-x86_64": {
+          "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-15-95259ea3bbe6/herdr-linux-x86_64",
+          "sha256": "9cadb4b5018517967afc8514327f2ec385652dd77af85e827389d2efef0e5563"
+        },
+        "linux-aarch64": {
+          "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-15-95259ea3bbe6/herdr-linux-aarch64",
+          "sha256": "fa3f151fb70aee3b1b6aeb67dc7d9d617b3e8e1f1fb193986be29bb644c30f73"
+        },
+        "macos-x86_64": {
+          "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-15-95259ea3bbe6/herdr-macos-x86_64",
+          "sha256": "10b2bcf98e03040fd83c74d5e83b4b7d62f4533a3429465d313583db3b3d8923"
+        },
+        "macos-aarch64": {
+          "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-15-95259ea3bbe6/herdr-macos-aarch64",
+          "sha256": "debbf74561d4ce0ad11e01e5d27a21fe59b3f1116f057210eb648d1368fe1c9d"
+        },
+        "windows-x86_64": {
+          "url": "https://herdr.pkking.computer/releases/download/preview-2026-07-15-95259ea3bbe6/herdr-windows-x86_64.exe",
+          "sha256": "8166440cc464512de66dfd5c4a1ecd1a3f41b0e471df2678b4d563f80043cdac"
+        }
+      }
+    },
     "2026-07-13-64e30d357586": {
       "base_version": "0.7.1",
       "commit": "64e30d3575869a2856a6b68cd7c31820624c0e3f",
