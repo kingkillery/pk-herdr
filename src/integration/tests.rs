@@ -956,7 +956,7 @@ fn claude_v1_integration_status_is_outdated() {
 
     assert_eq!(claude.path, hook_path);
     assert_eq!(claude.installed_version, Some(1));
-    assert_eq!(claude.expected_version, 7);
+    assert_eq!(claude.expected_version, CLAUDE_INTEGRATION_VERSION);
     assert_eq!(claude.state, IntegrationStatusKind::Outdated);
 
     std::env::remove_var("HOME");
@@ -986,7 +986,7 @@ fn claude_v2_integration_status_is_outdated() {
 
     assert_eq!(claude.path, hook_path);
     assert_eq!(claude.installed_version, Some(2));
-    assert_eq!(claude.expected_version, 7);
+    assert_eq!(claude.expected_version, CLAUDE_INTEGRATION_VERSION);
     assert_eq!(claude.state, IntegrationStatusKind::Outdated);
 
     std::env::remove_var("HOME");
@@ -1119,7 +1119,7 @@ fn codex_v2_integration_status_is_outdated() {
 
     assert_eq!(codex.path, hook_path);
     assert_eq!(codex.installed_version, Some(2));
-    assert_eq!(codex.expected_version, 6);
+    assert_eq!(codex.expected_version, CODEX_INTEGRATION_VERSION);
     assert_eq!(codex.state, IntegrationStatusKind::Outdated);
 
     std::env::remove_var("HOME");
@@ -2536,13 +2536,31 @@ fn bundled_integration_assets_report_session_refs() {
     );
     assert!(!CODEX_HOOK_ASSET.contains("\"state\": action"));
     assert!(!CODEX_HOOK_ASSET.contains("pane.release_agent"));
-    assert!(KIMI_HOOK_ASSET.contains("source = \"herdr:kimi\""));
-    assert!(KIMI_HOOK_ASSET.contains("agent_session_id"));
-    assert!(KIMI_HOOK_ASSET.contains("pane.report_agent_session"));
-    assert!(KIMI_HOOK_ASSET.contains("\"state\": action"));
+    assert!(
+        KIMI_HOOK_ASSET.contains("source = \"herdr:kimi\"")
+            || KIMI_HOOK_ASSET.contains("--source herdr:kimi")
+    );
+    assert!(
+        KIMI_HOOK_ASSET.contains("agent_session_id")
+            || KIMI_HOOK_ASSET.contains("--agent-session-id")
+    );
+    assert!(
+        KIMI_HOOK_ASSET.contains("pane.report_agent_session")
+            || KIMI_HOOK_ASSET.contains("report-agent-session")
+    );
+    assert!(
+        KIMI_HOOK_ASSET.contains("\"state\": action")
+            || KIMI_HOOK_ASSET.contains("--state $Action")
+    );
     assert!(!KIMI_HOOK_ASSET.contains("pane.release_agent"));
-    assert!(COPILOT_HOOK_ASSET.contains("agent_session_id"));
-    assert!(COPILOT_HOOK_ASSET.contains("pane.report_agent_session"));
+    assert!(
+        COPILOT_HOOK_ASSET.contains("agent_session_id")
+            || COPILOT_HOOK_ASSET.contains("--agent-session-id")
+    );
+    assert!(
+        COPILOT_HOOK_ASSET.contains("pane.report_agent_session")
+            || COPILOT_HOOK_ASSET.contains("report-agent-session")
+    );
     assert!(!COPILOT_HOOK_ASSET.contains("\"state\":"));
     assert!(!COPILOT_HOOK_ASSET.contains("pane.release_agent"));
     assert!(DEVIN_HOOK_ASSET.contains("HERDR_DEVIN_LIST_JSON"));
@@ -2551,8 +2569,14 @@ fn bundled_integration_assets_report_session_refs() {
     assert!(!DEVIN_HOOK_ASSET.contains("\"state\":"));
     assert!(!DEVIN_HOOK_ASSET.contains("pane.release_agent"));
     assert!(DEVIN_HOOK_ASSET.contains("agent_session_id"));
-    assert!(DROID_HOOK_ASSET.contains("agent_session_id"));
-    assert!(DROID_HOOK_ASSET.contains("pane.report_agent_session"));
+    assert!(
+        DROID_HOOK_ASSET.contains("agent_session_id")
+            || DROID_HOOK_ASSET.contains("--agent-session-id")
+    );
+    assert!(
+        DROID_HOOK_ASSET.contains("pane.report_agent_session")
+            || DROID_HOOK_ASSET.contains("report-agent-session")
+    );
     assert!(!DROID_HOOK_ASSET.contains("\"state\": action"));
     assert!(!DROID_HOOK_ASSET.contains("pane.release_agent"));
     assert!(OPENCODE_PLUGIN_ASSET.contains("properties?.sessionID"));
@@ -2571,9 +2595,18 @@ fn bundled_integration_assets_report_session_refs() {
     assert!(HERMES_PLUGIN_INIT_ASSET.contains("on_session_end"));
     assert!(!HERMES_PLUGIN_INIT_ASSET.contains("on_session_finalize"));
     assert!(!HERMES_PLUGIN_INIT_ASSET.contains("pane.release_agent"));
-    assert!(QODERCLI_HOOK_ASSET.contains("HERDR_HOOK_INPUT_FILE"));
-    assert!(QODERCLI_HOOK_ASSET.contains("agent_session_id"));
-    assert!(QODERCLI_HOOK_ASSET.contains("pane.report_agent_session"));
+    assert!(
+        QODERCLI_HOOK_ASSET.contains("HERDR_HOOK_INPUT_FILE")
+            || QODERCLI_HOOK_ASSET.contains("In.ReadToEnd")
+    );
+    assert!(
+        QODERCLI_HOOK_ASSET.contains("agent_session_id")
+            || QODERCLI_HOOK_ASSET.contains("--agent-session-id")
+    );
+    assert!(
+        QODERCLI_HOOK_ASSET.contains("pane.report_agent_session")
+            || QODERCLI_HOOK_ASSET.contains("report-agent-session")
+    );
     assert!(!QODERCLI_HOOK_ASSET.contains("\"state\": action"));
     assert!(!QODERCLI_HOOK_ASSET.contains("pane.release_agent"));
     assert!(!QODERCLI_HOOK_ASSET.contains("QODER_HOOK_EVENT"));
