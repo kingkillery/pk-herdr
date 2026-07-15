@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://herdr.pkking.computer">herdr.pkking.computer</a> · <a href="#install">install</a> · <a href="#quick-start">quick start</a> · <a href="#supported-agents">supported agents</a> · <a href="https://herdr.pkking.computer/docs/integrations/">integrations</a> · <a href="https://herdr.pkking.computer/docs/configuration/">configuration</a> · <a href="https://herdr.pkking.computer/docs/socket-api/">socket api</a> · <a href="#sponsors">sponsor</a>
+  <a href="https://herdr.pkking.computer">herdr.pkking.computer</a> · <a href="#install">install</a> · <a href="#quick-start">quick start</a> · <a href="#supported-agents">supported agents</a> · <a href="https://herdr.pkking.computer/docs/integrations/">integrations</a> · <a href="https://herdr.pkking.computer/docs/configuration/">configuration</a> · <a href="https://herdr.pkking.computer/docs/socket-api/">socket api</a>
 </p>
 
 ---
@@ -313,12 +313,6 @@ just test        # unit tests
 just check       # formatting, tests, and maintenance checks
 ```
 
-## sponsors
-
-herdr is built full-time, in the open, with no revenue behind it. sponsoring directly funds development, stability, and the path to a real agent runtime.
-
-[**→ become a sponsor**](https://github.com/sponsors/ogulcancelik) · enterprise / partnership: hey@herdr.dev · see [SPONSORS.md](./SPONSORS.md) for tiers. thank you 🐑
-
 ## license
 
 Herdr is dual-licensed:
@@ -327,13 +321,3 @@ Herdr is dual-licensed:
 2. Commercial: commercial licenses are available for organizations that cannot comply with AGPL.
 
 Contact: hey@herdr.dev
-
-## mandatory star history
-
-<a href="https://www.star-history.com/?repos=ogulcancelik%2Fherdr&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=ogulcancelik/herdr&type=date&theme=dark&legend=top-left&v=2026-05-19" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=ogulcancelik/herdr&type=date&legend=top-left&v=2026-05-19" />
-   <img alt="star history chart" src="https://api.star-history.com/chart?repos=ogulcancelik/herdr&type=date&legend=top-left&v=2026-05-19" />
- </picture>
-</a>
