@@ -54,6 +54,13 @@ jobs:
         with:
           version: 0.15.2
 
+      # setup-zig defaults ZIG_LOCAL_CACHE_DIR into the workspace, which
+      # dirties the tree and trips release-publish's clean-tree check.
+      - name: Keep zig caches outside the worktree
+        run: |
+          echo "ZIG_GLOBAL_CACHE_DIR=$RUNNER_TEMP/zig-global-cache" >> "$GITHUB_ENV"
+          echo "ZIG_LOCAL_CACHE_DIR=$RUNNER_TEMP/zig-local-cache" >> "$GITHUB_ENV"
+
       - name: Restore cargo cache
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
         with:
@@ -77,5 +84,6 @@ jobs:
           KANGAL_GITHUB_TOKEN: ${{ secrets.KANGAL_GITHUB_TOKEN }}
         run: |
           set -euo pipefail
+          git status --porcelain
           git remote set-url origin "https://x-access-token:${KANGAL_GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           just release-publish "${{ inputs.version }}"
