@@ -60,6 +60,11 @@ jobs:
           cache-bin: false
           key: release-pipeline
 
+      # release-prepare runs `cargo update -p herdr --offline`; a pristine
+      # runner has no registry index, so prime the cargo cache first.
+      - name: Fetch cargo dependencies
+        run: cargo fetch --locked
+
       - name: Prepare release commit
         run: |
           set -euo pipefail
